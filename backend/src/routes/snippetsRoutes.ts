@@ -1,9 +1,10 @@
 import express from 'express';
 import { createSnippet } from '../controllers/snippetsControllers';
+import { checkAuth } from '../middleware/checkAuth';
 
 const router = express.Router();
 
-router.post('/', createSnippet);
+router.post('/', checkAuth,createSnippet);
 
 
 

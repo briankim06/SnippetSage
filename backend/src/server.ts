@@ -1,8 +1,7 @@
 import express from 'express';
 import connectDB from './config/db';
 import snippetsRoutes from './routes/snippetsRoutes';
-import registerRoutes from './routes/registerRoutes';
-import loginRoutes from './routes/loginRoutes';
+import authRoutes from './routes/authRoutes';
 import dotenv from 'dotenv';
 import { checkAuth } from './middleware/checkAuth';
 
@@ -15,12 +14,9 @@ const app = express();
 app.use(express.json());
 app.use(checkAuth);
 app.use('/api/snippets', snippetsRoutes)
-app.use('/api/register', registerRoutes)
-app.use('/api/login', loginRoutes)
+app.use('/api/register', authRoutes)
 
-// app.get('/api/notes', (req, res) => {
-//     res.send('Hello World');
-// });
+
 
 connectDB().then(() => app.listen(PORT, () => {
     console.log(`Server is running on port ` + PORT);
