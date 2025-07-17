@@ -34,15 +34,38 @@ export async function createSnippet(req: Request, res: Response) {
 
 export async function getAllSnippets(req: Request, res: Response) {
     try {
-        const snippets = await Snippet.find({userId: req.userId});
-        res.status(200).json(snippets);
+        const {q, tag} = req.query;
+        const page = parseInt(String(req.query.page ?? '1'), 10);
+        const limit = parseInt(String(req.query.limit ?? '20'), 10)
 
+        const query: any = {userId: req.userId};
+
+        if (typeof tag === 'string') {
+            query.tags = tag;
+        }
+
+        if (typeof q === 'string' && q.trim()) {
+            const regex = new RegExp(q, 'i');
+            query.$or = [
+                {title: regex},
+                {code: regex}
+            ]
+        }
+
+        const snippets = await Snippet
+        .find(query)
+        .sort({createdAt: -1})
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+        res.status(200).json({snippets})
     } catch (error) {
-        console.error('Error in getAllSnippets:', error);
-        res.status(500).json({message: 'Internal server error'});
-        
+        console.error('Error in getAllSnippets', error);
+        res.status(500).json({message: 'Failed to fetch snippets'});
     }
 }
+
 
 export async function getSnippetById(req: Request, res: Response) {
     try {
