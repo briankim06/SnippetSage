@@ -4,6 +4,7 @@ import snippetsRoutes from './routes/snippetsRoutes';
 import authRoutes from './routes/authRoutes';
 import dotenv from 'dotenv';
 import { checkAuth } from './middleware/checkAuth';
+import { latencyMetric } from './middleware/latencyMetric';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const app = express();
 
 app.use(express.json());
 app.use(checkAuth);
+app.use(latencyMetric);
 app.use('/api/snippets', snippetsRoutes)
 app.use('/api/auth', authRoutes)
 
