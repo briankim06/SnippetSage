@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(checkAuth);
 app.use('/api/snippets', snippetsRoutes)
-app.use('/api/register', authRoutes)
+app.use('/api/auth', authRoutes)
 
 
 

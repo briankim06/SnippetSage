@@ -4,7 +4,7 @@ import { checkAuth } from '../middleware/checkAuth';
 
 const router = express.Router();
 
-router.post('/', checkAuth,createSnippet);
+router.post('/', checkAuth, createSnippet);
 
 
 
