@@ -4,6 +4,7 @@ import snippetsRoutes from './routes/snippetsRoutes';
 import registerRoutes from './routes/registerRoutes';
 import loginRoutes from './routes/loginRoutes';
 import dotenv from 'dotenv';
+import { checkAuth } from './middleware/checkAuth';
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ const app = express();
 
 
 app.use(express.json());
+app.use(checkAuth);
 app.use('/api/snippets', snippetsRoutes)
 app.use('/api/register', registerRoutes)
 app.use('/api/login', loginRoutes)
