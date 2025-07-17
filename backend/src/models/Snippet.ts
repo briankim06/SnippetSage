@@ -8,7 +8,6 @@ export interface ISnippet extends Document {
     framework: string;
     createdAt: Date;
     updatedAt: Date;
-    description?: string;
     tags?: string[];
     summary?: string;
     embeddingVector?: number[]
@@ -20,7 +19,6 @@ const SnippetSchema: Schema = new Schema<ISnippet>({
     code: {type: String, required: true},
     language: {type: String, required: true},
     framework: {type: String, required: true}, 
-    description: {type: String},
     tags: {type: [String]},
     summary: {type: String},
     embeddingVector: {type: [Number]},
