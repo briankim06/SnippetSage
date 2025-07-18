@@ -51,7 +51,7 @@ describe('authController', () => {
 
   describe('loginUser', () => {
     it('should login successfully and return a token', async () => {
-      mockAuthService.loginUser.mockResolvedValue('test-token');
+      mockAuthService.loginUser.mockResolvedValue({token:'test-token', refreshToken:'test-refresh-token'});
       await loginUser(req as Request, res as Response);
       expect(mockAuthService.loginUser).toHaveBeenCalledWith(req.body);
       expect(mockJson).toHaveBeenCalledWith({ token: 'test-token' });

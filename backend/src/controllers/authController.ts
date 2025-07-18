@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import authService from '../services/authService';
 import { AuthError, ValidationError } from '../lib/errors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export async function registerUser(req: Request, res: Response) {
   try {
@@ -26,7 +29,13 @@ export async function registerUser(req: Request, res: Response) {
 
 export async function loginUser(req: Request, res: Response) {
   try {
-    const token = await authService.loginUser(req.body);
+    const { token, refreshToken } = await authService.loginUser(req.body);
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // Frontend is on vercel, backend in on heroku
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    })
     res.json({ token });
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -38,4 +47,27 @@ export async function loginUser(req: Request, res: Response) {
     console.error('Error in loginUser:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}
+
+export async function refreshToken(req: Request, res: Response) {
+    try {
+        // Find refreshToken
+        const  { newToken, newRefreshToken } = await authService.validateRefreshToken(req.cookies.refreshToken);
+        
+        // Set refresh token
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly:true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.json({ token: newToken });
+
+    } catch (error) {
+        if (error instanceof AuthError) return res.status(401).json({message: "Invalid or expired refresh token"});
+        
+        console.error("Error in refresh token", error);
+        return res.status(500).json({message: "Internal server error"})
+    }
+}
+

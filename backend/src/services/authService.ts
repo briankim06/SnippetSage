@@ -2,6 +2,10 @@ import User, { IUser } from '../models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { ValidationError, AuthError } from '../lib/errors';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 type UserCredentials = Pick<IUser, 'email'> & { password?: string };
 
@@ -23,7 +27,7 @@ class AuthService {
     }
   }
 
-  public async loginUser(credentials: UserCredentials): Promise<string> {
+  public async loginUser(credentials: UserCredentials): Promise<{token: string, refreshToken: string}> {
     const { email, password } = credentials;
     if (!email || !password) throw new ValidationError({ message: 'Email and password are required' });
     
@@ -38,10 +42,32 @@ class AuthService {
 
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not set');
     
+    const refreshToken = generateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    return token;
+    return { token, refreshToken };
+
+    
   }
+
+  public async validateRefreshToken(refreshToken: string): Promise<{ newToken: string, newRefreshToken: string }> {
+    const user = await User.findOne({refreshToken});
+    if (!user) throw new AuthError('Invalid token');
+    if(!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not set');
+
+    const newToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const newRefreshToken = generateRefreshToken();
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    return { newToken, newRefreshToken };
+}
+}
+
+export function generateRefreshToken(): string {
+    return crypto.randomBytes(64).toString('hex')
 }
 
 export default new AuthService(); 
