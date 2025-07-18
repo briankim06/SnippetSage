@@ -17,6 +17,11 @@ class SnippetService {
       userId,
     });
 
+    
+    // Invalidate search cache; must update cache to show created snippet
+    const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
+    await redis.del(...cachedSearches);
+
     return snippet;
   }
 
@@ -64,6 +69,9 @@ class SnippetService {
     if (!snippet) {
       throw new NotFoundError('Snippet not found');
     }
+
+    //Cache snippet in Redis
+    await redis.set(cacheKey, snippet, {ex: 60});
     return snippet;
   }
 
@@ -79,6 +87,13 @@ class SnippetService {
       { new: true }
     );
 
+    // Invalidate individual snippet cache
+    const snippetCacheKey = buildCacheKey(userId, snippetId);
+    await redis.del(snippetCacheKey);
+    // Invalidate search cache; must update cache to show created snippet
+    const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
+    await redis.del(...cachedSearches);
+
     if (!updatedSnippet) {
       throw new NotFoundError('Snippet not found');
     }
@@ -91,6 +106,13 @@ class SnippetService {
     if (!deletedSnippet) {
       throw new NotFoundError('Snippet not found');
     }
+    // Invalidate individual snippet cache
+     const snippetCacheKey = buildCacheKey(userId, snippetId);
+     await redis.del(snippetCacheKey);
+
+    // Invalidate search cache; must update cache to show created snippet
+    const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
+    await redis.del(...cachedSearches);
   }
 }
 

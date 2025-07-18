@@ -23,7 +23,12 @@ import path from 'path';
     },
   ]);
 
-  const output = `Search metrics ${start.toDateString()} → p50=${result.p50[0]} ms, p95=${result.p95[0]} ms, n=${result.count}\n`;
+  let output;
+  if (result) {
+    output = `Search metrics ${start.toDateString()} → p50=${result.p50[0]} ms, p95=${result.p95[0]} ms, n=${result.count}\n`;
+  } else {
+    output = `Search metrics ${start.toDateString()} → No data found for /api/snippets/search\n`;
+  }
 
   console.log(output);
 
