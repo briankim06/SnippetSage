@@ -29,3 +29,7 @@ ehthumbs.db
 # Frontend (Vite)
 frontend/dist/
 frontend/.vite/
+
+#Cursor rules
+.cursor/
+.cursor/rules/

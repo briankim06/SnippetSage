@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Metric from '../src/models/Metric';
+import Metric from '../../backend/src/models/Metric';
 import dayjs from 'dayjs';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +12,7 @@ import path from 'path';
 
   // @ts-expect-error: $percentile is a valid MongoDB 5.2+ operator but not in types yet
   const [result] = await Metric.aggregate([
-    { $match: { path: '/api/snippets/search', createdAt: { $gte: start, $lt: end } } },
+    { $match: { path: '/search', createdAt: { $gte: start, $lt: end } } },
     {
       $group: {
         _id: null,
