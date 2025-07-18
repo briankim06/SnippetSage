@@ -1,6 +1,9 @@
 import Snippet, { ISnippet } from '../models/Snippet';
 import { validateSnippet } from '../utils/validateSnippet';
 import { ValidationError, NotFoundError } from '../lib/errors';
+import { redis } from '../lib/redis';
+import { buildCacheKey } from '../utils/buildCacheKey';
+import { isValidCachedSnippet } from '../utils/validateCachedSnippet';
 
 class SnippetService {
   public async createSnippet(userId: string, snippetData: Partial<ISnippet>): Promise<ISnippet> {
@@ -25,6 +28,14 @@ class SnippetService {
       query.tags = tag;
     }
 
+    // Check if query is cached in Redis
+    const cacheKey = buildCacheKey(userId, queryParams);
+    const cachedSnippets = await redis.get(cacheKey);
+    if (cachedSnippets && Array.isArray(cachedSnippets)) {
+        return cachedSnippets;
+    }
+
+
     if (typeof q === 'string' && q.trim()) {
       const regex = new RegExp(q, 'i');
       query.$or = [{ title: regex }, { code: regex }];
@@ -34,11 +45,21 @@ class SnippetService {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      
+
+    // Cache resulting snippets in Redis
+    await redis.set(cacheKey, snippets, {ex: 60})
+
     return snippets;
   }
 
   public async getSnippetById(userId: string, snippetId: string): Promise<ISnippet> {
+    // Check if snippet is cached in Redis
+    const cacheKey = buildCacheKey(userId, snippetId);
+    const cachedSnippet = await redis.get(cacheKey);
+    if (cachedSnippet && isValidCachedSnippet(cachedSnippet)) {
+        return cachedSnippet;
+    }
+
     const snippet = await Snippet.findOne({ _id: snippetId, userId });
     if (!snippet) {
       throw new NotFoundError('Snippet not found');
