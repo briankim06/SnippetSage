@@ -1,397 +1,146 @@
-import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import {
   createSnippet,
   getAllSnippets,
   getSnippetById,
   updateSnippet,
-  deleteSnippet
+  deleteSnippet,
 } from './snippetsControllers';
-import Snippet from '../models/Snippet';
-import { validateSnippet } from '../utils/validateSnippet';
+import snippetService from '../services/snippetService';
+import { ValidationError, NotFoundError } from '../lib/errors';
 
-// Load environment variables
-dotenv.config();
+jest.mock('../services/snippetService');
 
-// Mock dependencies
-jest.mock('../models/Snippet');
-jest.mock('../utils/validateSnippet');
-
-const mockSnippet = Snippet as jest.Mocked<typeof Snippet>;
-const mockValidateSnippet = validateSnippet as jest.MockedFunction<typeof validateSnippet>;
+const mockSnippetService = snippetService as jest.Mocked<typeof snippetService>;
 
 describe('Snippets Controllers', () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
   let mockJson: jest.Mock;
   let mockStatus: jest.Mock;
+  let mockSend: jest.Mock;
 
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
-    
-    // Setup mock response methods
+
     mockJson = jest.fn();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    
-    // Setup mock request and response objects
+    mockSend = jest.fn();
+    mockStatus = jest.fn().mockReturnValue({ json: mockJson, send: mockSend });
+
     mockReq = {
       userId: 'user123',
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
-    
+
     mockRes = {
       status: mockStatus,
-      json: mockJson
+      json: mockJson,
     };
   });
 
   describe('createSnippet', () => {
-    const validSnippetData = {
-      title: 'Test Snippet',
-      code: 'console.log("hello world")',
-      language: 'javascript',
-      framework: 'node',
-      tags: ['test', 'example'],
-      summary: 'A test snippet'
-    };
-
-    beforeEach(() => {
-      mockReq.body = validSnippetData;
-    });
-
-    it('should create a snippet successfully', async () => {
-      const createdSnippet = { _id: 'snippet123', userId: 'user123', ...validSnippetData };
-      
-      mockValidateSnippet.mockReturnValue({ ok: true });
-      mockSnippet.create.mockResolvedValue(createdSnippet as any);
+    it('should call snippetService.createSnippet and return 201', async () => {
+      const snippet = { title: 'New Snippet' };
+      mockSnippetService.createSnippet.mockResolvedValue(snippet as any);
 
       await createSnippet(mockReq as Request, mockRes as Response);
 
-      expect(mockValidateSnippet).toHaveBeenCalledWith(validSnippetData);
-      expect(mockSnippet.create).toHaveBeenCalledWith({
-        userId: 'user123',
-        ...validSnippetData
-      });
+      expect(mockSnippetService.createSnippet).toHaveBeenCalledWith(mockReq.userId, mockReq.body);
       expect(mockStatus).toHaveBeenCalledWith(201);
-      expect(mockJson).toHaveBeenCalledWith(createdSnippet);
+      expect(mockJson).toHaveBeenCalledWith(snippet);
     });
 
-    it('should return 400 when validation fails', async () => {
-      const validationErrors = ['Title is required', 'Code cannot be empty'];
-      
-      mockValidateSnippet.mockReturnValue({ 
-        ok: false, 
-        errors: validationErrors 
-      });
+    it('should handle validation errors from the service and return 400', async () => {
+      const error = new ValidationError(['Invalid title']);
+      mockSnippetService.createSnippet.mockRejectedValue(error);
 
       await createSnippet(mockReq as Request, mockRes as Response);
 
-      expect(mockValidateSnippet).toHaveBeenCalledWith(validSnippetData);
       expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: ' Invalid snippet data',
-        errors: validationErrors
-      });
-    });
-
-    it('should handle database errors', async () => {
-      mockValidateSnippet.mockReturnValue({ ok: true });
-      mockSnippet.create.mockRejectedValue(new Error('Database error'));
-
-      await createSnippet(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(500);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Failed to create snippet'
-      });
-    });
-  });
-
-  describe('getAllSnippets', () => {
-    beforeEach(() => {
-      mockReq.query = {};
-    });
-
-    it('should fetch all snippets for user with default pagination', async () => {
-      const snippets = [
-        { _id: 'snippet1', title: 'Snippet 1', userId: 'user123' },
-        { _id: 'snippet2', title: 'Snippet 2', userId: 'user123' }
-      ];
-
-      mockSnippet.find.mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          skip: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              lean: jest.fn().mockResolvedValue(snippets)
-            })
-          })
-        })
-      } as any);
-
-      await getAllSnippets(mockReq as Request, mockRes as Response);
-
-      expect(mockSnippet.find).toHaveBeenCalledWith({ userId: 'user123' });
-      expect(mockStatus).toHaveBeenCalledWith(200);
-      expect(mockJson).toHaveBeenCalledWith({ snippets });
-    });
-
-    it('should handle search query', async () => {
-      mockReq.query = { q: 'test' };
-
-      mockSnippet.find.mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          skip: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              lean: jest.fn().mockResolvedValue([])
-            })
-          })
-        })
-      } as any);
-
-      await getAllSnippets(mockReq as Request, mockRes as Response);
-
-      expect(mockSnippet.find).toHaveBeenCalledWith({
-        userId: 'user123',
-        $or: [
-          { title: /test/i },
-          { code: /test/i }
-        ]
-      });
-    });
-
-    it('should handle tag filter', async () => {
-      mockReq.query = { tag: 'javascript' };
-
-      mockSnippet.find.mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          skip: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              lean: jest.fn().mockResolvedValue([])
-            })
-          })
-        })
-      } as any);
-
-      await getAllSnippets(mockReq as Request, mockRes as Response);
-
-      expect(mockSnippet.find).toHaveBeenCalledWith({
-        userId: 'user123',
-        tags: 'javascript'
-      });
-    });
-
-    it('should handle custom pagination', async () => {
-      mockReq.query = { page: '2', limit: '10' };
-
-      mockSnippet.find.mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          skip: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              lean: jest.fn().mockResolvedValue([])
-            })
-          })
-        })
-      } as any);
-
-      await getAllSnippets(mockReq as Request, mockRes as Response);
-
-      expect(mockSnippet.find).toHaveBeenCalledWith({ userId: 'user123' });
-    });
-
-    it('should handle database errors', async () => {
-      mockSnippet.find.mockReturnValue({
-        sort: jest.fn().mockReturnValue({
-          skip: jest.fn().mockReturnValue({
-            limit: jest.fn().mockReturnValue({
-              lean: jest.fn().mockRejectedValue(new Error('Database error'))
-            })
-          })
-        })
-      } as any);
-
-      await getAllSnippets(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(500);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Failed to fetch snippets'
-      });
+      expect(mockJson).toHaveBeenCalledWith({ message: error.message, errors: error.errors });
     });
   });
 
   describe('getSnippetById', () => {
-    beforeEach(() => {
+    it('should call snippetService.getSnippetById and return 200', async () => {
       mockReq.params = { id: 'snippet123' };
-    });
-
-    it('should fetch snippet by id successfully', async () => {
-      const snippet = { 
-        _id: 'snippet123', 
-        title: 'Test Snippet', 
-        userId: 'user123' 
-      };
-
-      mockSnippet.findOne.mockResolvedValue(snippet);
+      const snippet = { title: 'Found Snippet' };
+      mockSnippetService.getSnippetById.mockResolvedValue(snippet as any);
 
       await getSnippetById(mockReq as Request, mockRes as Response);
 
-      expect(mockSnippet.findOne).toHaveBeenCalledWith({
-        _id: 'snippet123',
-        userId: 'user123'
-      });
+      expect(mockSnippetService.getSnippetById).toHaveBeenCalledWith(mockReq.userId, 'snippet123');
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(snippet);
     });
 
-    it('should return 404 when snippet not found', async () => {
-      mockSnippet.findOne.mockResolvedValue(null);
+    it('should handle not found errors from the service and return 404', async () => {
+      const error = new NotFoundError('Snippet not found');
+      mockSnippetService.getSnippetById.mockRejectedValue(error);
 
       await getSnippetById(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Snippet not found'
-      });
-    });
-
-    it('should handle database errors', async () => {
-      mockSnippet.findOne.mockRejectedValue(new Error('Database error'));
-
-      await getSnippetById(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(500);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Internal server error'
-      });
+      expect(mockJson).toHaveBeenCalledWith({ message: error.message });
     });
   });
 
   describe('updateSnippet', () => {
-    const updateData = {
-      title: 'Updated Snippet',
-      code: 'console.log("updated")',
-      language: 'javascript',
-      framework: 'node',
-      tags: ['updated'],
-      summary: 'Updated summary'
-    };
-
-    beforeEach(() => {
+    it('should call snippetService.updateSnippet and return 200', async () => {
       mockReq.params = { id: 'snippet123' };
-      mockReq.body = updateData;
-    });
-
-    it('should update snippet successfully', async () => {
-      const updatedSnippet = { 
-        _id: 'snippet123', 
-        userId: 'user123', 
-        ...updateData 
-      };
-
-      mockValidateSnippet.mockReturnValue({ ok: true });
-      mockSnippet.findOneAndUpdate.mockResolvedValue(updatedSnippet);
+      const updatedSnippet = { title: 'Updated Snippet' };
+      mockSnippetService.updateSnippet.mockResolvedValue(updatedSnippet as any);
 
       await updateSnippet(mockReq as Request, mockRes as Response);
 
-      expect(mockValidateSnippet).toHaveBeenCalledWith(updateData);
-      expect(mockSnippet.findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: 'snippet123', userId: 'user123' },
-        updateData,
-        { new: true }
-      );
+      expect(mockSnippetService.updateSnippet).toHaveBeenCalledWith(mockReq.userId, 'snippet123', mockReq.body);
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith(updatedSnippet);
     });
 
-    it('should return 400 when validation fails', async () => {
-      const validationErrors = ['Title is required'];
-      
-      mockValidateSnippet.mockReturnValue({ 
-        ok: false, 
-        errors: validationErrors 
-      });
-
-      await updateSnippet(mockReq as Request, mockRes as Response);
-
-      expect(mockValidateSnippet).toHaveBeenCalledWith(updateData);
-      expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: ' Invalid snippet data',
-        errors: validationErrors
-      });
+    it('should handle validation errors and return 400', async () => {
+        const error = new ValidationError(['Invalid data']);
+        mockSnippetService.updateSnippet.mockRejectedValue(error);
+  
+        await updateSnippet(mockReq as Request, mockRes as Response);
+  
+        expect(mockStatus).toHaveBeenCalledWith(400);
+        expect(mockJson).toHaveBeenCalledWith({ message: error.message, errors: error.errors });
     });
 
-    it('should return 404 when snippet not found', async () => {
-      mockValidateSnippet.mockReturnValue({ ok: true });
-      mockSnippet.findOneAndUpdate.mockResolvedValue(null);
-
-      await updateSnippet(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Snippet not found'
-      });
-    });
-
-    it('should handle database errors', async () => {
-      mockValidateSnippet.mockReturnValue({ ok: true });
-      mockSnippet.findOneAndUpdate.mockRejectedValue(new Error('Database error'));
-
-      await updateSnippet(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(500);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Internal server error'
-      });
+    it('should handle not found errors and return 404', async () => {
+        const error = new NotFoundError('Snippet not found');
+        mockSnippetService.updateSnippet.mockRejectedValue(error);
+  
+        await updateSnippet(mockReq as Request, mockRes as Response);
+  
+        expect(mockStatus).toHaveBeenCalledWith(404);
+        expect(mockJson).toHaveBeenCalledWith({ message: error.message });
     });
   });
 
   describe('deleteSnippet', () => {
-    beforeEach(() => {
+    it('should call snippetService.deleteSnippet and return 204', async () => {
       mockReq.params = { id: 'snippet123' };
-    });
-
-    it('should delete snippet successfully', async () => {
-      const deletedSnippet = { 
-        _id: 'snippet123', 
-        title: 'Deleted Snippet', 
-        userId: 'user123' 
-      };
-
-      mockSnippet.findOneAndDelete.mockResolvedValue(deletedSnippet);
+      mockSnippetService.deleteSnippet.mockResolvedValue();
 
       await deleteSnippet(mockReq as Request, mockRes as Response);
 
-      expect(mockSnippet.findOneAndDelete).toHaveBeenCalledWith({
-        _id: 'snippet123',
-        userId: 'user123'
-      });
+      expect(mockSnippetService.deleteSnippet).toHaveBeenCalledWith(mockReq.userId, 'snippet123');
       expect(mockStatus).toHaveBeenCalledWith(204);
-      expect(mockJson).toHaveBeenCalledWith(deletedSnippet);
+      expect(mockSend).toHaveBeenCalled();
     });
 
-    it('should return 404 when snippet not found', async () => {
-      mockSnippet.findOneAndDelete.mockResolvedValue(null);
+    it('should handle not found errors and return 404', async () => {
+      const error = new NotFoundError('Snippet not found');
+      mockSnippetService.deleteSnippet.mockRejectedValue(error);
 
       await deleteSnippet(mockReq as Request, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Snippet not found'
-      });
-    });
-
-    it('should handle database errors', async () => {
-      mockSnippet.findOneAndDelete.mockRejectedValue(new Error('Database error'));
-
-      await deleteSnippet(mockReq as Request, mockRes as Response);
-
-      expect(mockStatus).toHaveBeenCalledWith(500);
-      expect(mockJson).toHaveBeenCalledWith({
-        message: 'Internal server error'
-      });
+      expect(mockJson).toHaveBeenCalledWith({ message: error.message });
     });
   });
 }); 

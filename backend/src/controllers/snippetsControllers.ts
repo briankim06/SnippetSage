@@ -1,119 +1,88 @@
-import Snippet from '../models/Snippet';
 import { Request, Response } from 'express';
-import { validateSnippet } from '../utils/validateSnippet';
+import snippetService from '../services/snippetService';
+import { ValidationError, NotFoundError } from '../lib/errors';
 
 export async function createSnippet(req: Request, res: Response) {
-    try {
+  try {
 
-        // Validate request body
-        const check = validateSnippet(req.body);
-        if (!check.ok) return res.status(400).json({message:" Invalid snippet data", errors: check.errors})
+    const snippet = await snippetService.createSnippet(req.userId as string, req.body);
+    res.status(201).json(snippet);
 
-        const {title, code, language, 
-               framework, tags, summary
-               } = req.body;
+  } catch (error) {
 
-        // Create new snippet
-        const snippet = await Snippet.create({
-            userId: req.userId,
-            title, 
-            code, 
-            language, 
-            framework, 
-            tags,
-            summary
-        });
-
-        res.status(201).json(snippet);
-
-    } catch (error) {
-        console.error('Error in createSnippet', error);
-        res.status(500).json({message: 'Failed to create snippet'});
+    if (error instanceof ValidationError) {
+      return res.status(400).json({ message: error.message, errors: error.errors });
     }
+
+    console.error('Error in createSnippet', error);
+    res.status(500).json({ message: 'Failed to create snippet' });
+  }
 }
 
 export async function getAllSnippets(req: Request, res: Response) {
-    try {
-        const {q, tag} = req.query;
-        const page = parseInt(String(req.query.page ?? '1'), 10);
-        const limit = parseInt(String(req.query.limit ?? '20'), 10)
+  try {
 
-        const query: any = {userId: req.userId};
+    const snippets = await snippetService.getAllSnippets(req.userId as string, req.query);
+    res.status(200).json({ snippets });
 
-        if (typeof tag === 'string') {
-            query.tags = tag;
-        }
+  } catch (error) {
 
-        if (typeof q === 'string' && q.trim()) {
-            const regex = new RegExp(q, 'i');
-            query.$or = [
-                {title: regex},
-                {code: regex}
-            ]
-        }
-
-        const snippets = await Snippet
-        .find(query)
-        .sort({createdAt: -1})
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
-
-        res.status(200).json({snippets})
-    } catch (error) {
-        console.error('Error in getAllSnippets', error);
-        res.status(500).json({message: 'Failed to fetch snippets'});
-    }
+    console.error('Error in getAllSnippets', error);
+    res.status(500).json({ message: 'Failed to fetch snippets' });
+  }
 }
 
-
 export async function getSnippetById(req: Request, res: Response) {
-    try {
-        const snippet = await Snippet.findOne(
-            {_id: req.params.id, userId: req.userId}
-        );
+  try {
 
-        if (!snippet) return res.status(404).json({message: 'Snippet not found'});
-        res.status(200).json(snippet);
+    const snippet = await snippetService.getSnippetById(req.userId as string, req.params.id);
+    res.status(200).json(snippet);
 
-    } catch (error) {
-        console.error('Error in getSnippetById:', error);
-        res.status(500).json({message: 'Internal server error'});
+  } catch (error) {
+
+    if (error instanceof NotFoundError) {
+      return res.status(404).json({ message: error.message });
     }
+
+    console.error('Error in getSnippetById:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }
 
 export async function updateSnippet(req: Request, res: Response) {
-    try {
-        const check = validateSnippet(req.body);
-        if (!check.ok) return res.status(400).json({message:" Invalid snippet data", errors: check.errors});
-        const {title, code, language, 
-               framework, tags, summary
-              } = req.body;
+  try {
 
-        const updatedSnippet = await Snippet.findOneAndUpdate(
-            {_id: req.params.id, userId: req.userId},
-            {title, code, language, framework, tags, summary}, 
-            {new: true});
+    const updatedSnippet = await snippetService.updateSnippet(req.userId as string, req.params.id, req.body);
+    res.status(200).json(updatedSnippet);
 
-        if (!updatedSnippet) return res.status(404).json({message: 'Snippet not found'});
+  } catch (error) {
 
-        res.status(200).json(updatedSnippet)
-
-    } catch (error) {
-        console.error('Error in updateSnippet:', error);
-        res.status(500).json({message: 'Internal server error'});
+    if (error instanceof ValidationError) {
+      return res.status(400).json({ message: error.message, errors: error.errors });
     }
+
+    if (error instanceof NotFoundError) {
+      return res.status(404).json({ message: error.message });
+    }
+
+    console.error('Error in updateSnippet:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }
 
-
 export async function deleteSnippet(req: Request, res: Response) {
-    try {
-        const deletedSnippet = await Snippet.findOneAndDelete({_id: req.params.id, userId: req.userId});
-        if (!deletedSnippet) return res.status(404).json({message: "Snippet not found"});
+  try {
 
-        return res.status(204).json(deletedSnippet);
-    } catch (error) {
-        console.error("Error in deleteSnippet ", error);
-        res.status(500).json({message: "Internal server error"})
+    await snippetService.deleteSnippet(req.userId as string, req.params.id);
+    res.status(204).send();
+
+  } catch (error) {
+
+    if (error instanceof NotFoundError) {
+      return res.status(404).json({ message: error.message });
     }
+    
+    console.error("Error in deleteSnippet ", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
