@@ -7,7 +7,7 @@ export function latencyMetric(req: Request, res: Response, next: NextFunction) {
 
   res.on('finish', async () => {
     // Only log search requests – adjust if you want global metrics
-    if (req.path.startsWith('/search')) {
+    if (req.path.startsWith('/api/snippets/search')) {
       const ms = Date.now() - start;
       try {
         await Metric.create({

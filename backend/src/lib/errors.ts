@@ -17,4 +17,10 @@ export class NotFoundError extends AppError {
   constructor(message: string = 'Resource not found') {
     super(message);
   }
+}
+
+export class AuthError extends AppError {
+  constructor(message: string) {
+    super(message);
+  }
 } 
