@@ -1,8 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
-import type { RootState } from "../../store"
 import type { FetchArgs, BaseQueryFn, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { Mutex } from 'async-mutex'
 import { setToken, logoutSuccess } from '../authSlice'
+import type { RootState } from '../types'
+
+
+
 
 const baseQuery = fetchBaseQuery({
     baseUrl: "http://localhost:5001/api",

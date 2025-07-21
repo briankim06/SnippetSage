@@ -30,3 +30,12 @@ export type RegisterCredentials = {
   email: string;
   password: string;
 }
+
+export type RootState = {
+  auth: {
+      token: string | null;
+      isLoading: boolean;
+      error: string | null;
+      user: any | null;
+  };
+}

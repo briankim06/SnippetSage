@@ -1,4 +1,4 @@
-import type { RootState } from '../store'
+import type { RootState } from '../slices/types'
 
 export const selectIsAuth = (state: RootState) => (!!state.auth.token);
 export const selectToken = (state: RootState) => (state.auth.token);
