@@ -39,3 +39,37 @@ export type RootState = {
       user: any | null;
   };
 }
+
+export type UserSnippet = {
+  userId: string,
+  title: string;
+  code: string;
+  language?: string;
+  framework?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tags?: string[];
+  summary?: string;
+}
+
+export type SearchQueryParams = {
+  q?: string;
+  tag?: string;
+  page?: number;
+  limit?: number;
+}
+
+export type CreateSnippetData = {
+  title: string;
+  code: string;
+}
+
+export type UpdateSnippetData = {
+  snippetId: string;
+  title?: string;
+  code?: string;
+  language?: string;
+  framework?: string;
+  tags?: string[];
+  summary?: string;
+}

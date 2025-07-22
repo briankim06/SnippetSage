@@ -1,6 +1,6 @@
 import { baseApi } from './baseApi';
 import { loginSuccess, setError, setLoading } from '../authSlice';
-import type { LoginResponse, RegisterResponse, SafeUser, LoginCredentials, RegisterCredentials, RefreshTokenResponse } from '../types';
+import type { LoginResponse, RegisterResponse, SafeUser, LoginCredentials, RegisterCredentials } from '../types';
 
 export const authApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
@@ -29,12 +29,7 @@ export const authApi = baseApi.injectEndpoints({
         getUserInfo: builder.query<SafeUser, void>({
             query: () => ({url: "/auth/me"}),
         }),
-
-        //refresh token 
-        refreshToken: builder.mutation<RefreshTokenResponse, void>({
-            query: () => ({url: "/auth/refresh", method: "POST", credentials: "include"}),
-        })
     })
 })
 
-export const { useLoginMutation, useRegisterMutation, useGetUserInfoQuery, useRefreshTokenMutation } = authApi;
+export const { useLoginMutation, useRegisterMutation, useGetUserInfoQuery } = authApi;
