@@ -29,6 +29,8 @@ export type LoginCredentials = {
 export type RegisterCredentials = {
   email: string;
   password: string;
+  name: string;
+  username: string;
 }
 
 export type RootState = {

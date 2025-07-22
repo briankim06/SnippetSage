@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { toast } from "sonner"
 import { useLoginMutation } from "@/store/slices/api/authApi"
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 export function LoginForm({
   className,

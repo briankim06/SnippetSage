@@ -5,31 +5,36 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useState } from "react"
 import { useRegisterMutation } from "@/store/slices/api/authApi"
-import { useNavigate } from "react-router"
+import { useNavigate } from "react-router-dom"
 
+// TODO: Add name and username fields
 export function RegistrationForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [name, setName] = useState("")
+    const [username, setUsername] = useState("")
+
+    
     const [register, {isLoading}] = useRegisterMutation()
     const navigate = useNavigate()
 
     const handleRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (!email.trim() || !password.trim()) {
+        if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
             toast.error("Please fill in all fields")
             return;
           }
 
         try {
-            await register({email, password}).unwrap();
+            await register({email, password, name, username}).unwrap();
             toast.success("Registration successful");
             navigate("/login");
         } catch (error: any) {
-            toast.error(error?.data?.message ??"Registration failed");
+            toast.error(error?.data?.message ?? "Registration failed");
         }
 
     }
@@ -39,6 +44,16 @@ export function RegistrationForm({
         <h1 className="text-2xl font-bold">REGISTER</h1>
       </div>
       <div className="grid gap-6">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-3">
+            <Label htmlFor="name">NAME</Label>
+            <Input id="name" value={name} onChange={(e)=>setName(e.target.value)} required />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="username">USERNAME</Label>
+            <Input id="username" value={username} onChange={(e)=>setUsername(e.target.value)} required />
+          </div>
+        </div>
         <div className="grid gap-3">
           <Label htmlFor="email">EMAIL</Label>
           <Input 

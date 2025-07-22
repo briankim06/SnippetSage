@@ -5,8 +5,8 @@ import { checkAuth } from '../middleware/checkAuth';
 const router = express.Router();
 
 router.get('/search', checkAuth, getAllSnippets);
+router.get('/:id', checkAuth, getSnippetById);
 router.post('/', checkAuth, createSnippet);
-router.post('/:id', checkAuth, getSnippetById);
 router.patch('/:id', checkAuth, updateSnippet);
 router.delete('/:id', checkAuth, deleteSnippet);
 

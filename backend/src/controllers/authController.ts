@@ -1,15 +1,17 @@
 import { Request, Response } from 'express';
 import authService from '../services/authService';
-import { AuthError, ValidationError } from '../lib/errors';
+import { AuthError, ValidationError, NotFoundError } from '../lib/errors';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export async function registerUser(req: Request, res: Response) {
   try {
+
     const user = await authService.registerUser(req.body);
     const { passwordHash, ...userResponse } = user.toObject();
     res.status(201).json(userResponse);
+    
   } catch (error: any) {
     if (error instanceof ValidationError) {
       return res.status(400).json({
@@ -29,14 +31,14 @@ export async function registerUser(req: Request, res: Response) {
 
 export async function loginUser(req: Request, res: Response) {
   try {
-    const { token, refreshToken } = await authService.loginUser(req.body);
+    const { token, refreshToken, safeUser } = await authService.loginUser(req.body);
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax', // Frontend is on vercel, backend in on heroku
         maxAge: 7 * 24 * 60 * 60 * 1000
     })
-    res.json({ token });
+    res.json({ token, safeUser });
   } catch (error) {
     if (error instanceof ValidationError) {
       return res.status(400).json({ message: error.message });
@@ -49,7 +51,7 @@ export async function loginUser(req: Request, res: Response) {
   }
 }
 
-export async function refreshToken(req: Request, res: Response) {
+export async function validateRefreshToken(req: Request, res: Response) {
     try {
         // Find refreshToken
         const  { newToken, newRefreshToken } = await authService.validateRefreshToken(req.cookies.refreshToken);
@@ -69,5 +71,18 @@ export async function refreshToken(req: Request, res: Response) {
         console.error("Error in refresh token", error);
         return res.status(500).json({message: "Internal server error"})
     }
+
 }
 
+export async function getUserInfo(req: Request, res: Response) {
+    try {
+        const userInfo = await authService.getUserData(req.userId as string);
+
+        return res.json({userInfo});
+    } catch (error) {
+        if (error instanceof NotFoundError) return res.status(404).json({message:"User not found"});
+        
+        console.error("Error in getUserInfo", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}

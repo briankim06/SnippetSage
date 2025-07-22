@@ -1,25 +1,25 @@
 import User, { IUser } from '../models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { ValidationError, AuthError } from '../lib/errors';
+import { ValidationError, AuthError, NotFoundError } from '../lib/errors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-type UserCredentials = Pick<IUser, 'email'> & { password?: string };
-
+type UserCredentials = Pick<IUser, 'email' | 'name' | 'username'> & { password: string };
+type SafeUser = Omit<IUser, 'passwordHash' | 'refreshToken'>
 
 class AuthService {
   public async registerUser(userData: UserCredentials): Promise<IUser> {
 
-    const { email, password } = userData;
-    if (!email || !password) throw new ValidationError({ message: 'Email and password are required' });
+    const { email, password, name, username } = userData;
+    if (!email || !password || !name || !username) throw new ValidationError({ message: 'Email, password, name and username are required' });
     
     const passwordHash = await bcrypt.hash(password, 10);
 
     try {
-      const user = await User.create({ email, passwordHash });
+      const user = await User.create({ email, passwordHash, name, username });
       return user;
     } catch (error: any) {
       if (error.code === 11000) throw new AuthError('Email already exists');
@@ -27,13 +27,14 @@ class AuthService {
     }
   }
 
-  public async loginUser(credentials: UserCredentials): Promise<{token: string, refreshToken: string}> {
+  public async loginUser(credentials: UserCredentials): Promise<{token: string, refreshToken: string, safeUser: SafeUser}> {
     const { email, password } = credentials;
     if (!email || !password) throw new ValidationError({ message: 'Email and password are required' });
     
 
     const user = await User.findOne({ email });
     if (!user) throw new AuthError('Invalid credentials');
+    
     
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -47,7 +48,11 @@ class AuthService {
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    return { token, refreshToken };
+    const {passwordHash, refreshToken: _,...rest} = user.toObject();
+    const safeUser: SafeUser = rest as SafeUser;
+
+    
+    return { token, refreshToken, safeUser };
 
     
   }
@@ -63,7 +68,16 @@ class AuthService {
     await user.save();
 
     return { newToken, newRefreshToken };
-}
+  }
+
+  public async getUserData(id: string): Promise<SafeUser> {
+
+    const user = await User.findById(id).select('-passwordHash -refreshToken')
+    if (!user) throw new NotFoundError('User not found');
+
+    return user;
+
+  }
 }
 
 export function generateRefreshToken(): string {

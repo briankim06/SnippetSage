@@ -5,15 +5,21 @@ import authRoutes from './routes/authRoutes';
 import dotenv from 'dotenv';
 import { checkAuth } from './middleware/checkAuth';
 import { latencyMetric } from './middleware/latencyMetric';
+import cors from 'cors';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
 const app = express();
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json());
-app.use(checkAuth);
 app.use(latencyMetric);
 app.use('/api/snippets', snippetsRoutes)
 app.use('/api/auth', authRoutes)

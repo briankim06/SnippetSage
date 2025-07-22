@@ -5,12 +5,16 @@ import { redis } from '../lib/redis';
 import { buildCacheKey } from '../utils/buildCacheKey';
 import { isValidCachedSnippet } from '../utils/validateCachedSnippet';
 
+type CreateSnippetData = Pick<ISnippet, 'title' | 'code' > & Partial<Omit<ISnippet, 'title' | 'code'>>;
+
 class SnippetService {
-  public async createSnippet(userId: string, snippetData: Partial<ISnippet>): Promise<ISnippet> {
+    public async createSnippet(userId: string, snippetData: CreateSnippetData): Promise<ISnippet> {
+
     const check = validateSnippet(snippetData);
-    if (!check.ok) {
-      throw new ValidationError(check.errors);
-    }
+    if (!check.ok) throw new ValidationError(check.errors);
+    
+    const { title, code } = snippetData;
+    if (!title || !code) throw new ValidationError({ message: 'Title and code are required' });
 
     const snippet = await Snippet.create({
       ...snippetData,
@@ -21,11 +25,11 @@ class SnippetService {
     // Invalidate search cache; must update cache to show created snippet
     const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
     await redis.del(...cachedSearches);
-
+    
     return snippet;
   }
 
-  public async getAllSnippets(userId: string, queryParams: any): Promise<ISnippet[]> {
+  public async getAllSnippets(userId: string, queryParams?: any): Promise<ISnippet[]> {
     const { q, tag, page = 1, limit = 20 } = queryParams;
     const query: any = { userId };
 
@@ -47,6 +51,7 @@ class SnippetService {
     }
 
     const snippets = await Snippet.find(query)
+    .select('-embeddingVector')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

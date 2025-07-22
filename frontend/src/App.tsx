@@ -17,7 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/register" element={<SignUpPage />} />
           <Route path="/snippet-view" element={<SnippetViewPage />} />
           <Route path="/ai-snippet-view" element={<AISnippetViewPage />} />
           <Route path="/ai-playground" element={<AIPlaygroundPage />} />
