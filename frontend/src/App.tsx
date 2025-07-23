@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
-import AISnippetViewPage from './pages/AISnippetViewPage'
+import SnippetSandboxPage from './pages/SnippetSandboxPage'
 import AIPlaygroundPage from './pages/AIPlaygroundPage'
 import { Toaster } from "@/components/ui/sonner"
 
@@ -17,7 +17,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<SignUpPage />} />
-          <Route path="/ai-snippet-view" element={<AISnippetViewPage />} />
+          <Route path="/snippet-sandbox" element={<SnippetSandboxPage />} />
           <Route path="/ai-playground" element={<AIPlaygroundPage />} />
         </Routes>
       </div>
