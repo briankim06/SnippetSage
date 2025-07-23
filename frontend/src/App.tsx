@@ -3,7 +3,6 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 import SnippetSandboxPage from './pages/SnippetSandboxPage'
-import AIPlaygroundPage from './pages/AIPlaygroundPage'
 import { Toaster } from "@/components/ui/sonner"
 
 
@@ -18,7 +17,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<SignUpPage />} />
           <Route path="/snippet-sandbox" element={<SnippetSandboxPage />} />
-          <Route path="/ai-playground" element={<AIPlaygroundPage />} />
         </Routes>
       </div>
     </>

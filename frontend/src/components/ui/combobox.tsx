@@ -19,32 +19,31 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-const frameworks = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-]
+export interface ComboboxOption {
+  value: string;
+  label: string;
+}
 
-export function ComboboxDemo() {
+interface ComboboxProps {
+  options: ComboboxOption[];
+  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+export function Combobox({ options, onChange, value: controlledValue, placeholder = "Select..." }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [uncontrolledValue, setUncontrolledValue] = React.useState("");
+  const value = controlledValue !== undefined ? controlledValue : uncontrolledValue;
+
+  const handleSelect = (currentValue: string) => {
+    if (onChange) {
+      onChange(currentValue === value ? "" : currentValue);
+    } else {
+      setUncontrolledValue(currentValue === value ? "" : currentValue);
+    }
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -53,34 +52,31 @@ export function ComboboxDemo() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-full justify-between"
         >
           {value
-            ? frameworks.find((framework) => framework.value === value)?.label
-            : "Select framework..."}
+            ? options.find((option) => option.value === value)?.label
+            : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-full min-w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandInput placeholder={placeholder} className="h-9" />
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandEmpty>No option found.</CommandEmpty>
             <CommandGroup>
-              {frameworks.map((framework) => (
+              {options.map((option) => (
                 <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
+                  key={option.value}
+                  value={option.value}
+                  onSelect={handleSelect}
                 >
-                  {framework.label}
+                  {option.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === framework.value ? "opacity-100" : "opacity-0"
+                      value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

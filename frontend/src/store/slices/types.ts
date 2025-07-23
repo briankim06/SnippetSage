@@ -64,6 +64,10 @@ export type SearchQueryParams = {
 export type CreateSnippetData = {
   title: string;
   code: string;
+  tags?: string[];
+  language?: string;
+  framework?: string;
+  summary?: string;
 }
 
 export type UpdateSnippetData = {
