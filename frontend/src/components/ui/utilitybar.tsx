@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const UtilityBar = () => {
+  const navigate = useNavigate();
   const buttons = [
     'NEW SNIPPET',
     'IMPORT FROM CLIPBOARD', 
@@ -9,7 +11,17 @@ const UtilityBar = () => {
   ];
 
   const handleButtonClick = (action: string) => {
-    console.log(`${action} clicked`);
+    if (action === 'NEW SNIPPET') {
+      navigate('/snippet-sandbox');
+    }
+
+    if (action === 'IMPORT FROM CLIPBOARD') {
+      navigate('/import-from-clipboard');
+    }
+
+    if (action === 'BULK UPLOAD') {
+      navigate('/bulk-upload');
+    }
   };
 
   return (

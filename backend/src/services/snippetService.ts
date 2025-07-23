@@ -5,7 +5,7 @@ import { redis } from '../lib/redis';
 import { buildCacheKey } from '../utils/buildCacheKey';
 import { isValidCachedSnippet } from '../utils/validateCachedSnippet';
 
-type CreateSnippetData = Pick<ISnippet, 'title' | 'code' > & Partial<Omit<ISnippet, 'title' | 'code'>>;
+type CreateSnippetData = Pick<ISnippet, 'title' | 'code'> & Partial<Omit<ISnippet, 'title' | 'code'>>;
 
 class SnippetService {
     public async createSnippet(userId: string, snippetData: CreateSnippetData): Promise<ISnippet> {
@@ -24,7 +24,9 @@ class SnippetService {
     
     // Invalidate search cache; must update cache to show created snippet
     const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
-    await redis.del(...cachedSearches);
+    if (cachedSearches.length > 0) {
+      await redis.del(...cachedSearches);
+    }
     
     return snippet;
   }

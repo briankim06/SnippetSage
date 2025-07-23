@@ -80,6 +80,11 @@ const SnippetSandBoxPage = () => {
 
   return (
     <div className="min-h-screen bg-snip-pink-light flex flex-col items-center py-12">
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+          <span className="text-white text-xl">Creating snippet...</span>
+        </div>
+      )}
       <Button
         type="button"
         variant="ghost"
@@ -100,7 +105,7 @@ const SnippetSandBoxPage = () => {
               <div className="flex flex-col gap-6">
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input 
+                  <Input disabled={isLoading} 
                     id="title" 
                     placeholder="Enter snippet title" 
                     className="mt-1" 
@@ -110,7 +115,7 @@ const SnippetSandBoxPage = () => {
                 </div>
                 <div>
                   <Label htmlFor="code">Code</Label>
-                  <textarea
+                  <textarea disabled={isLoading}
                     id="code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
@@ -120,7 +125,7 @@ const SnippetSandBoxPage = () => {
                 </div>
                 <div>
                   <Label>Language</Label>
-                  <Combobox options={LANGUAGES} placeholder="Select language..." />
+                  <Combobox value={language} onChange={setLanguage} options={LANGUAGES} placeholder="Select language..." />
                 </div>
                 <div>
                   <Label>Tags</Label>
@@ -133,6 +138,7 @@ const SnippetSandBoxPage = () => {
                     ))}
                   </div>
                   <Input
+                    disabled={isLoading}
                     value={tagInput}
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={addTag}
@@ -144,6 +150,7 @@ const SnippetSandBoxPage = () => {
               {/* Right column */}
               <div className="flex flex-col gap-6">
                 <Button
+                  disabled={isLoading}
                   type="button"
                   variant="ghost"
                   className="self-end mb-2"
@@ -158,6 +165,7 @@ const SnippetSandBoxPage = () => {
                         <SparkleIcon />Summary
                       </Label>
                       <textarea
+                        disabled={isLoading}
                         id="summary"
                         placeholder="Let AI generate a summary for you..."
                         className="mt-1 w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
