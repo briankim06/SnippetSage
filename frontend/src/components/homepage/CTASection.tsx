@@ -12,12 +12,7 @@ const CTASection = () => {
 
   return (
     <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Gradient Background */}
-      <div 
-        className={`absolute inset-0 bg-gradient-to-br from-snip-pink via-snip-rose to-snip-purple transition-opacity duration-1000 ease-out ${
-          isVisible ? 'opacity-90' : 'opacity-0'
-        }`} 
-      />
+      {/* Gradient Background removed for continuous background */}
       
       {/* Content */}
       <div className="relative z-10 text-center px-6 py-24">

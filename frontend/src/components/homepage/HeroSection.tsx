@@ -7,11 +7,10 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onSearch }: HeroSectionProps) => {
   return (
-    <section className="min-h-screen flex flex-col justify-center items-center px-6 relative bg-white">
+    <section className="min-h-screen flex flex-col justify-center items-center px-6 relative">
       {/* Subtle colored accent shape */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-snip-pink/20 rounded-full blur-3xl z-0" />
-      {/* Minimalistic background with subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-snip-pink-light/5 to-snip-blue/10 z-0" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl z-0" />
+      {/* Minimalistic background with subtle gradient (removed for continuous background) */}
       
       {/* Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto text-center">

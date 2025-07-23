@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useGetSnippetsQuery } from '@/store/slices/api/snippetApi';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -10,20 +11,12 @@ interface SearchBarProps {
 
 const SearchBar = ({ onSearch, placeholder = "Search for anything..." }: SearchBarProps) => {
   const [query, setQuery] = useState('');
-  const [semanticSearchEnabled, setSemanticSearchEnabled] = useState(false);
+  
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(query);
-    console.log('Semantic search enabled:', semanticSearchEnabled);
-  };
-
-  const toggleSemanticSearch = () => {
-    setSemanticSearchEnabled(!semanticSearchEnabled);
-  };
+ 
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto">
+    <form className="w-full max-w-4xl mx-auto">
       <div className="relative group">
         <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-snip-purple/60 h-6 w-6 transition-colors group-focus-within:text-snip-purple z-10" />
         <Input
