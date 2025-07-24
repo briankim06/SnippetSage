@@ -7,9 +7,8 @@ export const snippetApi = baseApi.injectEndpoints({
         // Get all Snippets Input: userId, queryParams, Output: Snippet[]
         // 1. Call /snippets endpoint with query params
         // 2. return the data
-        getSnippets: builder.query<UserSnippet[], SearchQueryParams>({
+        getSnippets: builder.query<{snippets: UserSnippet[], totalCount: number}, SearchQueryParams>({
             query: (queryParams) => ({url: "/snippets/search", method: "GET", params: queryParams}),
-            transformResponse: (resp: { snippets: UserSnippet[] }) => resp.snippets,
         }),
 
         //Get One Snippet Input: userId, SnippetId Output: UserSnippt

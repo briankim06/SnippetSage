@@ -18,11 +18,11 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           SNIPPETSAGE
         </h1>
         
-        <div className="animate-fade-in" delay-1500>
+        <div className="animate-fade-in delay-1500">
           <SearchBar onSearch={onSearch} />
         </div>
         
-        <div className="mt-12 animate-fade-in" delay-1500>
+        <div className="mt-12 animate-fade-in delay-1500">
           <UtilityBar />
         </div>
       </div>

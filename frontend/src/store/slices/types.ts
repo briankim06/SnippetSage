@@ -43,6 +43,7 @@ export type RootState = {
 }
 
 export type UserSnippet = {
+  _id: string;
   userId: string,
   title: string;
   code: string;
