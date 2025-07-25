@@ -23,7 +23,7 @@ export const snippetApi = baseApi.injectEndpoints({
 
         // Update Snippet Input: userId, snippet data, snippet id, output: updated snippet
         updateSnippet: builder.mutation<UserSnippet, UpdateSnippetData>({
-            query: (snippetId, ...patch) => ({url: `/snippets/${snippetId}`, method: "PATCH", body: patch}),    
+            query: ({id, ...patch}) => ({url: `/snippets/${id}`, method: "PATCH", body: patch}),    
         }),
 
         // Delete Snippet Input: userId, snippet id, output: void

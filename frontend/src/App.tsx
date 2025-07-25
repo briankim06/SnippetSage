@@ -7,6 +7,7 @@ import ImportFromClipboardPage from './pages/ImportFromClipboardPage'
 import BulkUploadPage from './pages/BulkUploadPage'
 import CreateCollectionPage from './pages/CreateCollectionPage'
 import { Toaster } from "@/components/ui/sonner"
+import EditSnippetPage from './pages/EditSnippetPage'
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<SignUpPage />} />
           <Route path="/snippet-sandbox" element={<SnippetSandboxPage />} />
+          <Route path="/snippets/:id" element={<EditSnippetPage />} />
           <Route path="/import-from-clipboard" element={<ImportFromClipboardPage />} />
           <Route path="/bulk-upload" element={<BulkUploadPage />} />
           <Route path="/create-collection" element={<CreateCollectionPage />} />

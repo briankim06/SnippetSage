@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Combobox } from "../components/ui/combobox";
 import { Badge } from "../components/ui/badge";
-import { useNavigate } from "react-router-dom";
-import { useCreateSnippetMutation } from "@/store/slices/api/snippetApi";
+import { useNavigate, useParams } from "react-router-dom";
+import { useUpdateSnippetMutation, useGetOneSnippetQuery } from "@/store/slices/api/snippetApi";
 import { toast } from "sonner";
 
 const LANGUAGES = [
@@ -28,22 +28,39 @@ const FRAMEWORKS = [
 
 function SparkleIcon() {
   return (
-    <span role="img" aria-label="sparkle" className="text-yellow-400 mr-2 cursor-pointer select-none">✨</span>
+    <span role="img" aria-label="ask-ai" className="text-yellow-400 mr-2 cursor-pointer select-none">✨</span>
   );
 }
 
-const SnippetSandBoxPage = () => {
+const EditSnippetPage = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [createSnippet, {isLoading}] = useCreateSnippetMutation();
-  const [tags, setTags] = useState<string[]>([]);
-  const [title, setTitle] = useState("");
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("");
-  const [framework, setFramework] = useState("");
-  const [summary, setSummary] = useState("");
+  const [updateSnippet, {isLoading}] = useUpdateSnippetMutation();
+  const {id} = useParams();
+  const {data: snippetData} = useGetOneSnippetQuery(
+    { snippetId: id! },
+    { skip: !id });
+  const [tags, setTags] = useState<string[]>(snippetData?.tags || []);
+    const [title, setTitle] = useState(snippetData?.title || "");
+    const [code, setCode] = useState(snippetData?.code || "");
+    const [language, setLanguage] = useState(snippetData?.language || "");
+    const [framework, setFramework] = useState(snippetData?.framework || "");
+    const [summary, setSummary] = useState(snippetData?.summary || "");
+
+
   const [tagInput, setTagInput] = useState("");
 
-  const handleCreateSnippet = async (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (snippetData) {
+        setTags(snippetData.tags || []);
+        setTitle(snippetData.title || "");
+        setCode(snippetData.code || "");
+        setLanguage(snippetData.language || "");
+        setFramework(snippetData.framework || "");
+        setSummary(snippetData.summary || "");
+    }
+  }, [snippetData]);
+
+  const handleEditSnippet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!title.trim() || !code.trim()) {
@@ -51,10 +68,11 @@ const SnippetSandBoxPage = () => {
       return;
     }
     try {
-      await createSnippet({title, code, tags, language, framework, summary: summary.trim()}).unwrap();
-      toast.success("Snippet created successfully");
+
+      await updateSnippet({id: id!,title, code, tags, language, framework, summary: summary.trim()}).unwrap();
+      toast.success("Snippet updated successfully");
     } catch (error) {
-      toast.error("Failed to create snippet");
+      toast.error("Failed to update snippet");
       console.error(error);
     }
     
@@ -90,10 +108,10 @@ const SnippetSandBoxPage = () => {
       >
         ← Back
       </Button>
-      <form onSubmit={handleCreateSnippet} className="w-full max-w-4xl">
+      <form onSubmit={handleEditSnippet} className="w-full max-w-4xl">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-semibold">Create Snippet</h2>
-          <Button type="submit" variant="ghost" className="px-6">Create Snippet</Button>
+          <h2 className="text-2xl font-semibold">EDIT</h2>
+          <Button type="submit" variant="ghost" className="px-6">UPDATE</Button>
         </div>
         <Card>
           <CardContent className="p-8">
@@ -101,7 +119,7 @@ const SnippetSandBoxPage = () => {
               {/* Left column */}
               <div className="flex flex-col gap-6">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">TITLE</Label>
                   <Input disabled={isLoading} 
                     id="title" 
                     placeholder="Enter snippet title" 
@@ -111,7 +129,7 @@ const SnippetSandBoxPage = () => {
                     />
                 </div>
                 <div>
-                  <Label htmlFor="code">Code</Label>
+                  <Label htmlFor="code">CODE</Label>
                   <textarea disabled={isLoading}
                     id="code"
                     value={code}
@@ -121,11 +139,11 @@ const SnippetSandBoxPage = () => {
                   />
                 </div>
                 <div>
-                  <Label>Language</Label>
+                  <Label>LANGUAGE</Label>
                   <Combobox value={language} onChange={setLanguage} options={LANGUAGES} placeholder="Select language..." />
                 </div>
                 <div>
-                  <Label>Tags</Label>
+                <Label>TAGS</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {tags.map(tag => (
                       <Badge key={tag} variant="outline" className="flex items-center gap-1">
@@ -159,7 +177,8 @@ const SnippetSandBoxPage = () => {
                   <div className="flex flex-col gap-6 animate-fade-in">
                     <div>
                       <Label htmlFor="summary" className="flex items-center">
-                        <SparkleIcon />Summary
+                        SUMMARY 
+                        <SparkleIcon />
                       </Label>
                       <textarea
                         disabled={isLoading}
@@ -171,7 +190,7 @@ const SnippetSandBoxPage = () => {
                       />
                     </div>
                     <div>
-                      <Label>Framework</Label>
+                      <Label>FRAMEWORK</Label>
                       <Combobox value = {framework} onChange={setFramework} options={FRAMEWORKS} placeholder="Select framework..." />
                     </div>
                   </div>
@@ -185,4 +204,4 @@ const SnippetSandBoxPage = () => {
   );
 };
 
-export default SnippetSandBoxPage;
+export default EditSnippetPage;

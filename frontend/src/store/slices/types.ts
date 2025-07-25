@@ -72,9 +72,9 @@ export type CreateSnippetData = {
 }
 
 export type UpdateSnippetData = {
-  snippetId: string;
-  title?: string;
-  code?: string;
+  id: string;
+  title: string;
+  code: string;
   language?: string;
   framework?: string;
   tags?: string[];

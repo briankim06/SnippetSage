@@ -7,7 +7,6 @@ import { useState } from "react"
 import { useRegisterMutation } from "@/store/slices/api/authApi"
 import { useNavigate } from "react-router-dom"
 
-// TODO: Add name and username fields
 export function RegistrationForm({
   className,
   ...props

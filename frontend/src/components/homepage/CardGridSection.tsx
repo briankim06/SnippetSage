@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import type { UserSnippet } from '@/store/slices/types';
 import { useGetSnippetsQuery } from '@/store/slices/api/snippetApi';
 import { PaginationBar } from '@/components/paginationbar';
-
+import { Link } from 'react-router-dom';
 
 const CardGridSection = () => {
   const [snippets, setSnippets] = useState<UserSnippet[]>([]);
@@ -31,10 +31,11 @@ const CardGridSection = () => {
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
         
         {Array.isArray(snippets) && snippets.map(snippet => (
-          <Card
-            key={snippet._id}
-            className="flex flex-col h-full shadow transition-transform duration-200 hover:-translate-y-2 hover:shadow-lg bg-white border border-gray-200"
-          >
+          <Link to={`/snippets/${snippet._id}`}>
+            <Card
+              key={snippet._id}
+              className="flex flex-col h-full shadow transition-transform duration-200 hover:-translate-y-2 hover:shadow-lg bg-white border border-gray-200"
+              >
             {/* Code Preview */}
             <pre className="flex-1 overflow-hidden text-xs bg-gray-50 rounded-t-xl p-4 font-mono whitespace-pre-line max-h-[70%]">
               {snippet.code.length > 180 ? snippet.code.slice(0, 180) + '...' : snippet.code}
@@ -55,6 +56,7 @@ const CardGridSection = () => {
               ))}
             </div>
           </Card>
+          </Link>
         ))}
       </div>
       <div className="flex justify-center absolute bottom-0 w-full">
