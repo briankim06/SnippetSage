@@ -8,6 +8,10 @@ import { Badge } from "../components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useCreateSnippetMutation } from "@/store/slices/api/snippetApi";
 import { toast } from "sonner";
+import { useDispatch, useSelector } from "react-redux";
+import { selectDraft, selectIsSaving, selectError } from "@/store/selectors/snippetSelectors"
+import { setDraft, clearDraft, updateDraftField, addDraftTag, removeDraftTag, setDraftSaving, setDraftError } from "@/store/slices/snippetSlice";
+import type { RootState } from "@/store/store";
 
 const LANGUAGES = [
   { value: "python", label: "Python" },
@@ -34,28 +38,34 @@ function SparkleIcon() {
 
 const SnippetSandBoxPage = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [createSnippet, {isLoading}] = useCreateSnippetMutation();
-  const [tags, setTags] = useState<string[]>([]);
-  const [title, setTitle] = useState("");
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("");
-  const [framework, setFramework] = useState("");
-  const [summary, setSummary] = useState("");
   const [tagInput, setTagInput] = useState("");
+  const [createSnippet, {isLoading}] = useCreateSnippetMutation();
+  const dispatch = useDispatch();
+  const draft = useSelector(selectDraft);
+  const isSaving = useSelector(selectIsSaving);
+  const error = useSelector(selectError);
 
   const handleCreateSnippet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!title.trim() || !code.trim()) {
+    dispatch(setDraftSaving(true));
+
+    if (!draft.title.trim() || !draft.code.trim()) {
       toast.error("Title and code are required");
+      dispatch(setDraftSaving(false));
       return;
     }
     try {
-      await createSnippet({title, code, tags, language, framework, summary: summary.trim()}).unwrap();
+      await createSnippet({title: draft.title, code: draft.code, tags: draft.tags, language: draft.language, framework: draft.framework, summary: draft.summary.trim()}).unwrap();
       toast.success("Snippet created successfully");
-    } catch (error) {
+      dispatch(clearDraft());
+    } catch (err: any) {
       toast.error("Failed to create snippet");
-      console.error(error);
+      const msg = err?.data?.message ?? "Failed to create snippet";
+      dispatch(setDraftError(msg));
+
+    } finally {
+      dispatch(setDraftSaving(false));
     }
     
   };
@@ -67,13 +77,13 @@ const SnippetSandBoxPage = () => {
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
       e.preventDefault();
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
+      if (!draft.tags.includes(tagInput.trim())) {
+        dispatch(addDraftTag(tagInput.trim()))
       }
       setTagInput("");
     }
   };
-  const removeTag = (tag: string) => setTags(tags.filter(t => t !== tag));
+  const removeTag = (tag: string) => dispatch(removeDraftTag(tag));
 
   return (
     <div className="min-h-screen bg-snip-pink-light flex flex-col items-center py-12">
@@ -106,28 +116,28 @@ const SnippetSandBoxPage = () => {
                     id="title" 
                     placeholder="Enter snippet title" 
                     className="mt-1" 
-                    value={title} 
-                    onChange={(e) => setTitle(e.target.value)} 
+                    value={draft.title}
+                    onChange={(e) => dispatch(updateDraftField({field: "title", value: e.target.value}))} 
                     />
                 </div>
                 <div>
                   <Label htmlFor="code">Code</Label>
                   <textarea disabled={isLoading}
                     id="code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
+                    value={draft.code}
+                    onChange={(e) => dispatch(updateDraftField({field: "code", value: e.target.value}))}
                     placeholder="Paste your code here..."
                     className="mt-1 w-full min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
                 </div>
                 <div>
                   <Label>Language</Label>
-                  <Combobox value={language} onChange={setLanguage} options={LANGUAGES} placeholder="Select language..." />
+                  <Combobox value={draft.language} onChange={(value) => dispatch(updateDraftField({field: "language", value}))} options={LANGUAGES} placeholder="Select language..." />
                 </div>
                 <div>
                   <Label>Tags</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {tags.map(tag => (
+                    {draft.tags.map(tag => (
                       <Badge key={tag} variant="outline" className="flex items-center gap-1">
                         {tag}
                         <button type="button" onClick={() => removeTag(tag)} className="ml-1 text-xs">×</button>
@@ -164,15 +174,15 @@ const SnippetSandBoxPage = () => {
                       <textarea
                         disabled={isLoading}
                         id="summary"
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
+                        value={draft.summary}
+                        onChange={(e) => dispatch(updateDraftField({field: "summary", value: (e.target.value)}))}
                         placeholder="Let AI generate a summary for you..."
                         className="mt-1 w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </div>
                     <div>
                       <Label>Framework</Label>
-                      <Combobox value = {framework} onChange={setFramework} options={FRAMEWORKS} placeholder="Select framework..." />
+                      <Combobox value = {draft.framework} onChange={(value) => dispatch(updateDraftField({field: "framework", value: value}))} options={FRAMEWORKS} placeholder="Select framework..." />
                     </div>
                   </div>
                 )}
