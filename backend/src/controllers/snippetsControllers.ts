@@ -22,8 +22,8 @@ export async function createSnippet(req: Request, res: Response) {
 export async function getAllSnippets(req: Request, res: Response) {
   try {
 
-    const snippets = await snippetService.getAllSnippets(req.userId as string, req.query);
-    res.status(200).json({ snippets });
+    const snippetsData = await snippetService.getAllSnippets(req.userId as string, req.query);
+    res.status(200).json(snippetsData);
 
   } catch (error) {
 

@@ -10,7 +10,7 @@ type CreateSnippetData = Pick<ISnippet, 'title' | 'code'> & Partial<Omit<ISnippe
 class SnippetService {
     public async createSnippet(userId: string, snippetData: CreateSnippetData): Promise<ISnippet> {
 
-    const check = validateSnippet(snippetData);
+    const check = validateSnippet(snippetData, true);
     if (!check.ok) throw new ValidationError(check.errors);
     
     const { title, code } = snippetData;
@@ -31,8 +31,8 @@ class SnippetService {
     return snippet;
   }
 
-  public async getAllSnippets(userId: string, queryParams?: any): Promise<ISnippet[]> {
-    const { q, tag, page = 1, limit = 20 } = queryParams;
+  public async getAllSnippets(userId: string, queryParams?: any): Promise<{snippets: ISnippet[], totalCount: number}> {
+    const { q, tag, page = 1} = queryParams;
     const query: any = { userId };
 
     if (typeof tag === 'string') {
@@ -43,7 +43,7 @@ class SnippetService {
     const cacheKey = buildCacheKey(userId, queryParams);
     const cachedSnippets = await redis.get(cacheKey);
     if (cachedSnippets && Array.isArray(cachedSnippets)) {
-        return cachedSnippets;
+        return {snippets: cachedSnippets, totalCount: cachedSnippets.length};
     }
 
 
@@ -55,13 +55,15 @@ class SnippetService {
     const snippets = await Snippet.find(query)
     .select('-embeddingVector')
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .skip((page - 1) * 15)
+      .limit(15)
+
+    const totalCount = await Snippet.countDocuments(query);
 
     // Cache resulting snippets in Redis
-    await redis.set(cacheKey, snippets, {ex: 60})
+    await redis.set(cacheKey, {snippets, totalCount}, {ex: 60});
 
-    return snippets;
+    return {snippets, totalCount};
   }
 
   public async getSnippetById(userId: string, snippetId: string): Promise<ISnippet> {
@@ -83,7 +85,7 @@ class SnippetService {
   }
 
   public async updateSnippet(userId: string, snippetId: string, snippetData: Partial<ISnippet>): Promise<ISnippet> {
-    const check = validateSnippet(snippetData);
+    const check = validateSnippet(snippetData, true);
     if (!check.ok) {
       throw new ValidationError(check.errors);
     }

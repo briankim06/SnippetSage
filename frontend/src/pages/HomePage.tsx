@@ -1,12 +1,15 @@
 import HeroSection from "@/components/homepage/HeroSection"
 import CardGridSection from "@/components/homepage/CardGridSection"
 import { Footer } from "@/components/homepage/Footer"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 const HomePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  
   const [bgColor, setBgColor] = useState('#F8B195');
 
+
+
+  // TODO: Refactor helper functions to a separate file
   // Color stops with fixed percentages
   const colorStops = [
     { pct: 0,    color: '#F8B195' },
@@ -59,14 +62,25 @@ const HomePage = () => {
       }
     };
 
+
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const isSearching = searchQuery.trim() !== "";
+
+
+  // To be called by the search bar
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    console.log('Searching for:', query);
+    // If a query is entered, scroll to the results section
+    if (query.trim() !== "") {
+      setTimeout(() => {resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}, 100);
+    }
   };
 
   return (
@@ -93,10 +107,10 @@ const HomePage = () => {
 
       {/* Sections wrapped with refs for IntersectionObserver */}
       <div>
-        <HeroSection onSearch={handleSearch} />
+        <HeroSection onSearch={handleSearch} isSearching={isSearching}/>
       </div>
-      <div>
-        <CardGridSection />
+      <div ref = {resultsRef}>
+        <CardGridSection searchQuery={searchQuery}/>
       </div>
       <div>
         <Footer />

@@ -5,12 +5,21 @@ import { useGetSnippetsQuery } from '@/store/slices/api/snippetApi';
 import { PaginationBar } from '@/components/paginationbar';
 import { Link } from 'react-router-dom';
 
-const CardGridSection = () => {
+
+interface CardGridSectionProps{
+  searchQuery: string;
+}
+
+
+const CardGridSection = ({searchQuery}: CardGridSectionProps) => {
+
   const [snippets, setSnippets] = useState<UserSnippet[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const {data: snippetsData, isLoading, error} = useGetSnippetsQuery({page: currentPage});
+  // fetch snippets from the backend, if q is empty, fetch all. If not, it's for a specific search query
+  // added tags for future implementation
+  const {data: snippetsData, isLoading, isError} = useGetSnippetsQuery({page: currentPage, q: searchQuery, tag: ""});
 
   useEffect(() => {
     if (snippetsData) {
@@ -22,12 +31,18 @@ const CardGridSection = () => {
 
   const onPageChange = (page: number) => {
     setCurrentPage(page);
-  }
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
+
+  if (isLoading) return <div className="flex justify-center mt-20 h-screen font-bold">Loading...</div>;
+  if (isError) return <div className="flex justify-center mt-20 font-bold">Error loading snippets.</div>
 
 
   return (
     <section className="relative w-full px-4 py-12 min-h-[130vh]">
-      <h1 className=" flex text-4xl font-bold text-black mb-10 justify-center">SNIPPETS</h1>
+      <h1 className="flex text-4xl font-bold text-black mb-10 justify-center">
+        {searchQuery ? "RESULTS" : "SNIPPETS"}
+      </h1>
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
         
         {Array.isArray(snippets) && snippets.map(snippet => (

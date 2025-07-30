@@ -9,6 +9,12 @@ export const snippetApi = baseApi.injectEndpoints({
         // 2. return the data
         getSnippets: builder.query<{snippets: UserSnippet[], totalCount: number}, SearchQueryParams>({
             query: (queryParams) => ({url: "/snippets/search", method: "GET", params: queryParams}),
+            providesTags: (res) =>
+                res ? [...res.snippets.map((s) => ({type: "Snippet" as const, id: s._id})),
+                    { type: "Snippet", id: "LIST"},
+                ]
+                : [{type: "Snippet", id: "LIST"}]
+
         }),
 
         //Get One Snippet Input: userId, SnippetId Output: UserSnippt
@@ -19,6 +25,36 @@ export const snippetApi = baseApi.injectEndpoints({
         // Create Snippet Input: userId, title, code Output: void
         createSnippet: builder.mutation<UserSnippet, CreateSnippetData>({
             query: (snippetData) => ({url: "/snippets", method: "POST", body: snippetData}),
+            invalidatesTags: [{type: "Snippet", id: "LIST"}],
+            async onQueryStarted(newData, {dispatch, queryFulfilled}) {
+                const patch = dispatch(
+                    snippetApi.util.updateQueryData(
+                        "getSnippets", 
+                        {q: '', page: 1, tag: ''},
+                        (draft) => {
+                            draft.snippets.unshift({...newData, _id: 'temp-id', createdAt: new Date(), updatedAt: new Date()} as UserSnippet);
+                            draft.totalCount++;
+                        }
+                    )
+                )
+                try {
+                    const { data: saved} = await queryFulfilled;
+                    dispatch (
+                        snippetApi.util.updateQueryData(
+                            "getSnippets",
+                            {q: "", page: 1, tag: ""},
+                            (draft) => {
+                                const i = draft.snippets.findIndex(s => s._id == 'temp-id');
+                                if (i !== -1) {
+                                    draft.snippets[i] = saved;
+                                }
+                            }
+                        )
+                    );
+                } catch (error) {
+                    patch.undo();
+                }
+            }
         }),
 
         // Update Snippet Input: userId, snippet data, snippet id, output: updated snippet

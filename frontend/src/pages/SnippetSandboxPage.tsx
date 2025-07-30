@@ -9,9 +9,9 @@ import { useNavigate } from "react-router-dom";
 import { useCreateSnippetMutation } from "@/store/slices/api/snippetApi";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { selectDraft, selectIsSaving, selectError } from "@/store/selectors/snippetSelectors"
-import { setDraft, clearDraft, updateDraftField, addDraftTag, removeDraftTag, setDraftSaving, setDraftError } from "@/store/slices/snippetSlice";
-import type { RootState } from "@/store/store";
+import { selectDraft, selectIsSaving } from "@/store/selectors/snippetSelectors"
+import { clearDraft, updateDraftField, addDraftTag, removeDraftTag, setDraftSaving, setDraftError } from "@/store/slices/snippetSlice";
+
 
 const LANGUAGES = [
   { value: "python", label: "Python" },
@@ -43,7 +43,6 @@ const SnippetSandBoxPage = () => {
   const dispatch = useDispatch();
   const draft = useSelector(selectDraft);
   const isSaving = useSelector(selectIsSaving);
-  const error = useSelector(selectError);
 
   const handleCreateSnippet = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -112,7 +111,7 @@ const SnippetSandBoxPage = () => {
               <div className="flex flex-col gap-6">
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input disabled={isLoading} 
+                  <Input disabled={isSaving} 
                     id="title" 
                     placeholder="Enter snippet title" 
                     className="mt-1" 
@@ -122,7 +121,7 @@ const SnippetSandBoxPage = () => {
                 </div>
                 <div>
                   <Label htmlFor="code">Code</Label>
-                  <textarea disabled={isLoading}
+                  <textarea disabled={isSaving}
                     id="code"
                     value={draft.code}
                     onChange={(e) => dispatch(updateDraftField({field: "code", value: e.target.value}))}
