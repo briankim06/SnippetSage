@@ -4,7 +4,7 @@ import { ValidationError, NotFoundError } from '../lib/errors';
 import { redis } from '../lib/redis';
 import { buildCacheKey } from '../utils/buildCacheKey';
 import { isValidCachedSnippet } from '../utils/validateCachedSnippet';
-
+import { index, index as pineconeIndex } from '../config/clients';
 type CreateSnippetData = Pick<ISnippet, 'title' | 'code'> & Partial<Omit<ISnippet, 'title' | 'code'>>;
 
 class SnippetService {
@@ -20,6 +20,24 @@ class SnippetService {
       ...snippetData,
       userId,
     });
+
+    // Upsert snippet into pinecone
+    const namespace = index.namespace(userId);
+
+    try {
+      await namespace.upsertRecords([{
+        "_id": snippet._id,
+        "chunk_text": `${snippet.title} ${snippet.code} ${snippet.summary}`,
+        "title": snippet.title,
+        "code": snippet.code,
+        "tags": snippet.tags,
+        "language": snippet.language,
+      }])
+    } catch (error) {
+      console.error('Error upserting snippet into pinecone:', error);
+      throw new Error('Failed to upsert snippet into pinecone');
+    }
+    
 
     
     // Invalidate search cache; must update cache to show created snippet
