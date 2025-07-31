@@ -72,6 +72,7 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const resultsRef = useRef<HTMLDivElement>(null);
   const isSearching = searchQuery.trim() !== "";
+  const [isSemantic, setIsSemantic] = useState(false);
 
 
   // To be called by the search bar
@@ -107,10 +108,10 @@ const HomePage = () => {
 
       {/* Sections wrapped with refs for IntersectionObserver */}
       <div>
-        <HeroSection onSearch={handleSearch} isSearching={isSearching}/>
+        <HeroSection onSearch={handleSearch} isSearching={isSearching} isSemantic={isSemantic} onToggleSemantic={() => setIsSemantic( prev => !prev)}/>
       </div>
       <div ref = {resultsRef}>
-        <CardGridSection searchQuery={searchQuery}/>
+        <CardGridSection searchQuery={searchQuery} isSemantic={isSemantic}/>
       </div>
       <div>
         <Footer />

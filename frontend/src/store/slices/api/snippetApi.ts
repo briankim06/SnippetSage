@@ -17,6 +17,15 @@ export const snippetApi = baseApi.injectEndpoints({
 
         }),
 
+        getSemanticSnippets: builder.query<{snippets: UserSnippet[], totalCount: number}, SearchQueryParams> ({
+            query: (queryParams) => ({url: "/snippets/search/semantic", method: "GET", params: queryParams}),
+            providesTags: (res) =>
+                res ? [...res.snippets.map((s) => ({type: "Snippet" as const, id: s._id})),
+                    { type: "Snippet", id: "LIST"},
+                ]
+                : [{type: "Snippet", id: "LIST"}]
+        }),
+
         //Get One Snippet Input: userId, SnippetId Output: UserSnippt
         getOneSnippet: builder.query<UserSnippet, {snippetId: string}>({
             query: ({ snippetId }) => ({url: `/snippets/${snippetId}`, method: "GET"}),
@@ -70,4 +79,4 @@ export const snippetApi = baseApi.injectEndpoints({
     }),
 })
 
-export const { useGetSnippetsQuery, useGetOneSnippetQuery, useCreateSnippetMutation, useUpdateSnippetMutation, useDeleteSnippetMutation } = snippetApi;
+export const { useGetSnippetsQuery, useGetOneSnippetQuery, useCreateSnippetMutation, useUpdateSnippetMutation, useDeleteSnippetMutation, useGetSemanticSnippetsQuery } = snippetApi;

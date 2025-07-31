@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { InputNoFocusBorder } from '@/components/ui/input';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
 
 
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  isSemantic?: boolean;
+  onToggleSemantic: () => void;
 }
 
-const SearchBar = ({ onSearch, placeholder = "Search for anything..." }: SearchBarProps) => {
+const SearchBar = ({ onSearch, placeholder = "Search for anything...", isSemantic, onToggleSemantic}: SearchBarProps) => {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -19,15 +22,30 @@ const SearchBar = ({ onSearch, placeholder = "Search for anything..." }: SearchB
 
   return (
     <form className="w-full max-w-4xl mx-auto" onSubmit={handleSubmit}>
-      <div className="relative group">
-        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-snip-purple/60 h-6 w-6 transition-colors group-focus-within:text-snip-purple z-10" />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
-          className="pl-16 pr-8 py-6 text-xl border-2 border-snip-pink-light/30 rounded-2xl focus:border-snip-purple focus:ring-0 bg-white/90 backdrop-blur-sm shadow-xl transition-all duration-300 hover:shadow-2xl focus:shadow-2xl h-16"
-        />
+      <div className="flex flex-col gap-2 items-start">
+        <div className="relative group w-full bg-white/90 rounded-2xl border-snip-pink-light/30 pb-9">
+          
+          <InputNoFocusBorder
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={placeholder}
+            className="pl-5 pr-8 py-6 text-xl rounded-2xl bg-transparent border-0 focus: outline-none transition-all duration-300 h-16"
+          />
+
+          <Button 
+              variant="semantic" 
+              size="sm" 
+              onClick={onToggleSemantic}
+              className={cn(
+                  "absolute left-4 bottom-2 rounded-full text-xs border border-snip-pink-light transition-colors",
+                  isSemantic && "bg-snip-pink-light text-snip-purple"
+                  )}>
+            SEMANTIC
+          </Button>
+        </div>
+
+        
       </div>
     </form>
   );

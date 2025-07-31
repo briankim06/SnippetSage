@@ -53,6 +53,10 @@ class SnippetService {
     const { q, tag, page = 1} = queryParams;
     const query: any = { userId };
 
+    if (typeof q === 'string' && q.trim()) {
+      throw new ValidationError({ q: 'search term is required' });
+    }
+
     if (typeof tag === 'string') {
       query.tags = tag;
     }
@@ -82,6 +86,47 @@ class SnippetService {
     await redis.set(cacheKey, {snippets, totalCount}, {ex: 60});
 
     return {snippets, totalCount};
+  }
+
+  public async semanticSearch(userId: string, queryParams?: any): Promise<{snippets: ISnippet[], totalCount: number}> {
+    
+    // Deconstruct query params
+    const { q } = queryParams;
+
+    // Check if query is cached in Redis
+    const cacheKey = buildCacheKey(userId, queryParams);
+    const cachedStr = await redis.get<string>(cacheKey);
+    if (cachedStr) {
+      return JSON.parse(cachedStr) as { snippets: ISnippet[]; totalCount: number };
+    }
+    
+    // Get namespace for user
+    const namespace = index.namespace(userId);
+
+    // Search pinecone for snippet, return the ids of the snippets, we will use these to search mongoDB for these snippets
+    const { result } = await namespace.searchRecords({
+      query: {
+        topK: 15,
+        inputs: { q },
+      },
+      fields: ['_id'],
+    });
+
+    // extract ids from pinecone results
+    const ids = result.hits.map((hit) => hit._id);
+
+    // Search mongoDB for these snippets
+    const snippets = await Snippet.find({ _id: { $in: ids }})
+                                  .select('-embeddingVector');
+
+    // Order the snippets by similarity score (from pinecone)
+    const snippetsById = new Map(snippets.map((s) => [s._id.toString(), s]));
+    const orderedSnippets = ids.map((id) => snippetsById.get(id)).filter(Boolean) as ISnippet[];
+
+    // Cache the results in Redis
+    await redis.set(cacheKey, JSON.stringify({snippets: orderedSnippets, totalCount: orderedSnippets.length }), { ex: 60 });
+    return {snippets: orderedSnippets, totalCount: orderedSnippets.length}
+
   }
 
   public async getSnippetById(userId: string, snippetId: string): Promise<ISnippet> {

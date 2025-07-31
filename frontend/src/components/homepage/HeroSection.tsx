@@ -3,10 +3,12 @@ import UtilityBar from '@/components/ui/utilitybar';
 
 interface HeroSectionProps {
   onSearch: (query: string) => void;
+  isSemantic: boolean;
   isSearching: boolean;
+  onToggleSemantic: () => void;
 }
 
-const HeroSection = ({ onSearch, isSearching }: HeroSectionProps) => {
+const HeroSection = ({ onSearch, isSearching, isSemantic, onToggleSemantic}: HeroSectionProps) => {
   
   
   return (
@@ -28,7 +30,7 @@ const HeroSection = ({ onSearch, isSearching }: HeroSectionProps) => {
         </h1>
         
         <div className="animate-fade-in delay-1500">
-          <SearchBar onSearch={onSearch} />
+          <SearchBar onSearch={onSearch} isSemantic = {isSemantic} onToggleSemantic={onToggleSemantic}/>
         </div>
         
         <div className="mt-12 animate-fade-in delay-1500">

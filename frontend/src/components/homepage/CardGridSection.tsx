@@ -1,32 +1,49 @@
 import { Card } from '@/components/ui/card';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { UserSnippet } from '@/store/slices/types';
-import { useGetSnippetsQuery } from '@/store/slices/api/snippetApi';
+import { useGetSnippetsQuery, useGetSemanticSnippetsQuery } from '@/store/slices/api/snippetApi';
 import { PaginationBar } from '@/components/paginationbar';
 import { Link } from 'react-router-dom';
 
 
 interface CardGridSectionProps{
   searchQuery: string;
+  isSemantic: boolean;
 }
 
 
-const CardGridSection = ({searchQuery}: CardGridSectionProps) => {
+const CardGridSection = ({searchQuery, isSemantic}: CardGridSectionProps) => {
 
-  const [snippets, setSnippets] = useState<UserSnippet[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   // fetch snippets from the backend, if q is empty, fetch all. If not, it's for a specific search query
   // added tags for future implementation
-  const {data: snippetsData, isLoading, isError} = useGetSnippetsQuery({page: currentPage, q: searchQuery, tag: ""});
 
-  useEffect(() => {
-    if (snippetsData) {
-      setTotalPages(Math.ceil((snippetsData.totalCount || 0)  / 15));
-      setSnippets(snippetsData.snippets || []);
-    }
-  }, [snippetsData]);
+    const {
+      data: snippetsData, 
+      isLoading: keywordIsLoading, 
+      isError: keywordIsError
+    } = useGetSnippetsQuery(
+      {page: currentPage, q: searchQuery, tag: ""},
+      {skip: isSemantic}
+    )
+
+    const {
+      data: semanticSnippetsData, 
+      isLoading: semanticIsLoading, 
+      isError: semanticIsError
+    } = useGetSemanticSnippetsQuery(
+      {page: currentPage, q: searchQuery, tag: ""},
+      {skip: !isSemantic}
+    )
+  
+    const data = isSemantic ? semanticSnippetsData : snippetsData;
+    const isLoading = isSemantic ? semanticIsLoading : keywordIsLoading;
+    const isError = isSemantic ? semanticIsError : keywordIsError;
+
+    const totalPages = 
+      data?.totalCount ? Math.max(1, Math.ceil(data.totalCount / 15)) : 1
+
 
 
   const onPageChange = (page: number) => {
@@ -45,7 +62,7 @@ const CardGridSection = ({searchQuery}: CardGridSectionProps) => {
       </h1>
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
         
-        {Array.isArray(snippets) && snippets.map(snippet => (
+        {data?.snippets.map((snippet: UserSnippet) => (
           <Link to={`/snippets/${snippet._id}`}>
             <Card
               key={snippet._id}
@@ -74,9 +91,9 @@ const CardGridSection = ({searchQuery}: CardGridSectionProps) => {
           </Link>
         ))}
       </div>
-      <div className="flex justify-center absolute bottom-0 w-full">
+      {totalPages > 1 && <div className="flex justify-center absolute bottom-0 w-full">
         <PaginationBar totalPages={totalPages} currentPage={currentPage} onPageChange={onPageChange} />
-      </div>
+      </div>}
     </section>
   );
 };

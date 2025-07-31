@@ -32,6 +32,22 @@ export async function getAllSnippets(req: Request, res: Response) {
   }
 }
 
+export async function semanticSearch(req: Request, res: Response) {
+  try {
+    
+    const snippetsData = await snippetService.semanticSearch(req.userId as string, req.query);
+    res.status(200).json(snippetsData);
+
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return res.status(400).json({message: error.message, errors: error.errors});
+    }
+
+    console.error('Error in semanticSearch', error);
+    res.status(500).json({message: 'Failed to search snippets'});
+  }
+}
+
 export async function getSnippetById(req: Request, res: Response) {
   try {
 
