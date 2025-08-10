@@ -42,12 +42,14 @@ const baseQueryWithReauth: BaseQueryFn<
                     const refresh = await baseQuery({url: "/auth/refresh", method: "POST"}, api, extra);
 
                     // if successful, set token to new token
-                    if (refresh && (refresh.data as any).token) {
+                    const refreshedToken = (refresh.data as any)?.token;
+                    if (refreshedToken) {
                         api.dispatch(setToken((refresh.data as any).token))
                         result = await baseQuery(args, api, extra);
+                        console.log("refresh worked!")
                     } else {
 
-                        // refresh failed, log the user out
+                    // refresh failed, log the user out
                         api.dispatch(logoutSuccess());
                     }
                 } finally {

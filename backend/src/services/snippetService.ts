@@ -27,7 +27,7 @@ class SnippetService {
     try {
       await namespace.upsertRecords([{
         "_id": snippet._id,
-        "chunk_text": `${snippet.title} ${snippet.code} ${snippet.summary}`,
+        "text": `${snippet.title} ${snippet.code} ${snippet.summary}`,
         "title": snippet.title,
         "code": snippet.code,
         "tags": snippet.tags,
@@ -53,9 +53,6 @@ class SnippetService {
     const { q, tag, page = 1} = queryParams;
     const query: any = { userId };
 
-    if (typeof q === 'string' && q.trim()) {
-      throw new ValidationError({ q: 'search term is required' });
-    }
 
     if (typeof tag === 'string') {
       query.tags = tag;
@@ -107,7 +104,7 @@ class SnippetService {
     const { result } = await namespace.searchRecords({
       query: {
         topK: 15,
-        inputs: { q },
+        inputs: { text: q },
       },
       fields: ['_id'],
     });

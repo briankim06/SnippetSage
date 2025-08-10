@@ -41,7 +41,7 @@ export const snippetApi = baseApi.injectEndpoints({
                         "getSnippets", 
                         {q: '', page: 1, tag: ''},
                         (draft) => {
-                            draft.snippets.unshift({...newData, _id: 'temp-id', createdAt: new Date(), updatedAt: new Date()} as UserSnippet);
+                            draft.snippets.unshift({...newData, _id: 'temp-id', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()} as UserSnippet);
                             draft.totalCount++;
                         }
                     )

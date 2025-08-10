@@ -33,7 +33,8 @@ const SearchBar = ({ onSearch, placeholder = "Search for anything...", isSemanti
             className="pl-5 pr-8 py-6 text-xl rounded-2xl bg-transparent border-0 focus: outline-none transition-all duration-300 h-16"
           />
 
-          <Button 
+          <Button
+              type="button" 
               variant="semantic" 
               size="sm" 
               onClick={onToggleSemantic}

@@ -49,8 +49,8 @@ export type UserSnippet = {
   code: string;
   language?: string;
   framework?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   tags?: string[];
   summary?: string;
 }

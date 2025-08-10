@@ -19,13 +19,14 @@ const CardGridSection = ({searchQuery, isSemantic}: CardGridSectionProps) => {
   // fetch snippets from the backend, if q is empty, fetch all. If not, it's for a specific search query
   // added tags for future implementation
 
+  const shouldUseSemantic = isSemantic && searchQuery.trim() !== '';
     const {
       data: snippetsData, 
       isLoading: keywordIsLoading, 
       isError: keywordIsError
     } = useGetSnippetsQuery(
       {page: currentPage, q: searchQuery, tag: ""},
-      {skip: isSemantic}
+      {skip: shouldUseSemantic}
     )
 
     const {
@@ -34,7 +35,7 @@ const CardGridSection = ({searchQuery, isSemantic}: CardGridSectionProps) => {
       isError: semanticIsError
     } = useGetSemanticSnippetsQuery(
       {page: currentPage, q: searchQuery, tag: ""},
-      {skip: !isSemantic}
+      {skip: !shouldUseSemantic}
     )
   
     const data = isSemantic ? semanticSnippetsData : snippetsData;
@@ -63,9 +64,9 @@ const CardGridSection = ({searchQuery, isSemantic}: CardGridSectionProps) => {
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
         
         {data?.snippets.map((snippet: UserSnippet) => (
-          <Link to={`/snippets/${snippet._id}`}>
+          <Link key={snippet._id} to={`/snippets/${snippet._id}`}>
             <Card
-              key={snippet._id}
+              
               className="flex flex-col h-full shadow transition-transform duration-200 hover:-translate-y-2 hover:shadow-lg bg-white border border-gray-200"
               >
             {/* Code Preview */}
