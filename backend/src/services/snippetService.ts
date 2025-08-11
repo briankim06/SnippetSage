@@ -54,9 +54,9 @@ class SnippetService {
     const query: any = { userId };
 
 
-    if (typeof tag === 'string') {
-      query.tags = tag;
-    }
+    // if (typeof tag === 'string') {
+    //   query.tags = tag;
+    // }
 
     // Check if query is cached in Redis
     const cacheKey = buildCacheKey(userId, queryParams);
