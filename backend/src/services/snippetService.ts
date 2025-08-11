@@ -181,7 +181,10 @@ class SnippetService {
 
     // Invalidate search cache; must update cache to show created snippet
     const cachedSearches = await redis.keys(`snippets:${userId}:*:*:*:*`);
-    await redis.del(...cachedSearches);
+    if (cachedSearches.length > 0) {
+      await redis.del(...cachedSearches);
+    }
+    
   }
 }
 

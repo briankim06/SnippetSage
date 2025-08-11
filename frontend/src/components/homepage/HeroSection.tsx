@@ -25,7 +25,7 @@ const HeroSection = ({ onSearch, isSearching, isSemantic, onToggleSemantic}: Her
       <div className="relative z-10 w-full max-w-4xl mx-auto text-center">
         <h1 className={`
           font-bold text-black mb-16 animate-fade-in
-          ${isSearching ? "text-5xl" : "text-6xl md:text-7xl"}`}>
+          ${isSearching ? "text-5xl pt-14" : "text-6xl md:text-7xl"}`}>
           SNIPPETSAGE
         </h1>
         

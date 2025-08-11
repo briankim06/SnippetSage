@@ -78,10 +78,7 @@ const HomePage = () => {
   // To be called by the search bar
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // If a query is entered, scroll to the results section
-    if (query.trim() !== "") {
-      setTimeout(() => {resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}, 100);
-    }
+
   };
 
   return (

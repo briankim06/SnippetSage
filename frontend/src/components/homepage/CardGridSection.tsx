@@ -58,7 +58,7 @@ const CardGridSection = ({searchQuery, isSemantic}: CardGridSectionProps) => {
 
   return (
     <section className="relative w-full px-4 py-12 min-h-[130vh]">
-      <h1 className="flex text-4xl font-bold text-black mb-10 justify-center">
+      <h1 className="flex text-5xl font-bold text-black mb-10 justify-center pt-24">
         {searchQuery ? "RESULTS" : "SNIPPETS"}
       </h1>
       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr">

@@ -73,7 +73,11 @@ export const snippetApi = baseApi.injectEndpoints({
 
         // Delete Snippet Input: userId, snippet id, output: void
         deleteSnippet: builder.mutation<void, {snippetId: string}>({
-            query: ({snippetId}) => ({url: `/snippets/${snippetId}`, method: "DELETE"})
+            query: ({snippetId}) => ({url: `/snippets/${snippetId}`, method: "DELETE"}),
+            invalidatesTags: (_r, __e, { snippetId }) => [
+                { type: "Snippet", id: snippetId },
+                { type: "Snippet", id: "LIST"}
+            ],
         }),
     
     }),

@@ -6,7 +6,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Combobox } from "../components/ui/combobox";
 import { Badge } from "../components/ui/badge";
 import { useNavigate, useParams } from "react-router-dom";
-import { useUpdateSnippetMutation, useGetOneSnippetQuery } from "@/store/slices/api/snippetApi";
+import { useUpdateSnippetMutation, useGetOneSnippetQuery, useDeleteSnippetMutation } from "@/store/slices/api/snippetApi";
 import { toast } from "sonner";
 
 const LANGUAGES = [
@@ -40,12 +40,12 @@ const EditSnippetPage = () => {
     { snippetId: id! },
     { skip: !id });
   const [tags, setTags] = useState<string[]>(snippetData?.tags || []);
-    const [title, setTitle] = useState(snippetData?.title || "");
-    const [code, setCode] = useState(snippetData?.code || "");
-    const [language, setLanguage] = useState(snippetData?.language || "");
-    const [framework, setFramework] = useState(snippetData?.framework || "");
-    const [summary, setSummary] = useState(snippetData?.summary || "");
-
+  const [title, setTitle] = useState(snippetData?.title || "");
+  const [code, setCode] = useState(snippetData?.code || "");
+  const [language, setLanguage] = useState(snippetData?.language || "");
+  const [framework, setFramework] = useState(snippetData?.framework || "");
+  const [summary, setSummary] = useState(snippetData?.summary || "");
+  const [deleteSnippet, {isLoading: isDeleting}] = useDeleteSnippetMutation();
 
   const [tagInput, setTagInput] = useState("");
 
@@ -78,9 +78,20 @@ const EditSnippetPage = () => {
     
   };
 
- 
+  const navigate = useNavigate(); 
+  const handleDeleteSnippet = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    try {
+      await deleteSnippet({snippetId: id!}).unwrap();
+      toast.success("Snippet deleted successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to delete snippet");
+      console.error(error);
+    }
+  } 
 
-  const navigate = useNavigate();
+  
 
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === "Enter" || e.key === ",") && tagInput.trim()) {
@@ -120,7 +131,7 @@ const EditSnippetPage = () => {
               <div className="flex flex-col gap-6">
                 <div>
                   <Label htmlFor="title">TITLE</Label>
-                  <Input disabled={isLoading} 
+                  <Input disabled={isLoading || isDeleting} 
                     id="title" 
                     placeholder="Enter snippet title" 
                     className="mt-1" 
@@ -130,7 +141,7 @@ const EditSnippetPage = () => {
                 </div>
                 <div>
                   <Label htmlFor="code">CODE</Label>
-                  <textarea disabled={isLoading}
+                  <textarea disabled={isLoading || isDeleting}
                     id="code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
@@ -153,7 +164,7 @@ const EditSnippetPage = () => {
                     ))}
                   </div>
                   <Input
-                    disabled={isLoading}
+                    disabled={isLoading || isDeleting}
                     value={tagInput}
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={addTag}
@@ -165,7 +176,7 @@ const EditSnippetPage = () => {
               {/* Right column */}
               <div className="flex flex-col gap-6">
                 <Button
-                  disabled={isLoading}
+                  disabled={isLoading || isDeleting}
                   type="button"
                   variant="ghost"
                   className="self-end mb-2"
@@ -181,7 +192,7 @@ const EditSnippetPage = () => {
                         <SparkleIcon />
                       </Label>
                       <textarea
-                        disabled={isLoading}
+                        disabled={isLoading || isDeleting}
                         id="summary"
                         value={summary}
                         onChange={(e) => setSummary(e.target.value)}
@@ -199,6 +210,16 @@ const EditSnippetPage = () => {
             </div>
           </CardContent>
         </Card>
+        <div className="flex justify-end pt-7">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            className="px-6"
+            onClick={handleDeleteSnippet}
+            disabled={isDeleting || isLoading}
+          >
+            DELETE</Button>
+        </div>
       </form>
     </div>
   );
