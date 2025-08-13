@@ -2,6 +2,7 @@ import express from 'express';
 import connectDB from './config/db';
 import snippetsRoutes from './routes/snippetsRoutes';
 import authRoutes from './routes/authRoutes';
+import aiRoutes from './routes/aiRoutes';
 import dotenv from 'dotenv';
 import { latencyMetric } from './middleware/latencyMetric';
 import cors from 'cors';
@@ -24,7 +25,7 @@ app.use(cookieParser());
 app.use(latencyMetric);
 app.use('/api/snippets', snippetsRoutes)
 app.use('/api/auth', authRoutes)
-
+app.use('/api/ai', aiRoutes)
 
 
 connectDB().then(() => app.listen(PORT, () => {

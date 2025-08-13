@@ -4,7 +4,7 @@ import { ValidationError, NotFoundError } from '../lib/errors';
 import { redis } from '../lib/redis';
 import { buildCacheKey } from '../utils/buildCacheKey';
 import { isValidCachedSnippet } from '../utils/validateCachedSnippet';
-import { index, index as pineconeIndex } from '../config/clients';
+import { index } from '../config/clients';
 type CreateSnippetData = Pick<ISnippet, 'title' | 'code'> & Partial<Omit<ISnippet, 'title' | 'code'>>;
 
 class SnippetService {
@@ -186,6 +186,8 @@ class SnippetService {
     }
     
   }
+
+
 }
 
 export default new SnippetService(); 

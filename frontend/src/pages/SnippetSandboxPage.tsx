@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Combobox } from "../components/ui/combobox";
 import { Badge } from "../components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import { useCreateSnippetMutation } from "@/store/slices/api/snippetApi";
 import { toast } from "sonner";
@@ -128,6 +129,20 @@ const SnippetSandBoxPage = () => {
                     placeholder="Paste your code here..."
                     className="mt-1 w-full min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   />
+                  <div className="flex justify-center gap-4">
+                    <Popover>
+                      <PopoverTrigger>Explain Code</PopoverTrigger>
+                        <PopoverContent>
+                          hello world
+                        </PopoverContent>
+                    </Popover>
+                    <Popover>
+                      <PopoverTrigger>Translate Code</PopoverTrigger>
+                        <PopoverContent>
+                          hello world
+                        </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 <div>
                   <Label>Language</Label>

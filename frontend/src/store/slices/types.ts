@@ -80,3 +80,21 @@ export type UpdateSnippetData = {
   tags?: string[];
   summary?: string;
 }
+
+export type TranslateRequest = {
+  code: string,
+  targetLanguage: string, 
+  sourceLanguage: string
+}
+
+export type TranslateResponse = {
+  translatedCode: string;
+}
+
+export type ExplainRequest = {
+  code: string
+}
+
+export type ExplainResponse = {
+  explanation: string;
+}
